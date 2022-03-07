@@ -2,14 +2,6 @@
 #include "randomGaussian.h"
 #include "math.h"
 #define radians(degrees) degrees * (M_PI / 180.0)
-#define stupidName 0.000061037018951994385
-
-typedef struct {
-    char hasNextValue;
-    double nextValue;
-    double mean;
-    double stdDev;
-}random;
 
 double randomDouble() {
     return (double) rand() / RAND_MAX * 2 - 1;
@@ -32,8 +24,6 @@ double randomGaussian(random *randomPointer) {
     do {
         v1 = randomDouble();
         v2 = randomDouble();
-//        v1 = (double) rand() * stupidName - 1;
-//        v2 = (double) rand() * stupidName - 1;
         s = (v1 * v1) + (v2 * v2);
     } while (s >= 1 || s == 0);
     multiplier = sqrt(-2 * log(s) / s);
