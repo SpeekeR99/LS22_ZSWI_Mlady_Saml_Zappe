@@ -1,13 +1,13 @@
 #include <stdlib.h>
 #include "randomGaussian.h"
-#include "math.h"
+#include <math.h>
 #define radians(degrees) degrees * (M_PI / 180.0)
 
 double randomDouble() {
     return (double) rand() / RAND_MAX * 2 - 1;
 }
 
-double randomGaussian(random *randomPointer) {
+double randomGaussian(GaussRandom *randomPointer) {
     //todo sanity check, is there nextValue?
     if (!randomPointer) {
         //nevim
@@ -33,7 +33,7 @@ double randomGaussian(random *randomPointer) {
 
 }
 
-double nextNormalDistDouble(random *randomPointer) {
+double nextNormalDistDouble(GaussRandom *randomPointer) {
     //todo sanity check
     if (!randomPointer) {
         //nevim
@@ -47,7 +47,7 @@ double nextNormalDistDouble(random *randomPointer) {
     return randomPointer->mean + randomGaussian(randomPointer) * randomPointer->stdDev;
 }
 
-double nextNormalDistDoubleFaster(random *randomPointer) {
+double nextNormalDistDoubleFaster(GaussRandom *randomPointer) {
     //todo sanity check
     if (!randomPointer) {
         //nevim
@@ -72,10 +72,10 @@ double nextNormalDistDoubleFaster(random *randomPointer) {
     return randomPointer->mean + (v1 * multiplier);
 }
 
-random *createRandom(double mean, double stdDev) {
-    random *newRandom;
+GaussRandom *createRandom(double mean, double stdDev) {
+    GaussRandom *newRandom;
 
-    newRandom = malloc(sizeof(random));
+    newRandom = malloc(sizeof(GaussRandom));
     if (newRandom) {
         newRandom->hasNextValue = 0;
         newRandom->stdDev = stdDev;
@@ -85,7 +85,7 @@ random *createRandom(double mean, double stdDev) {
     return newRandom;
 }
 
-void freeRandom(random **randomPointer) {
+void freeRandom(GaussRandom **randomPointer) {
     if (!randomPointer || !*randomPointer) return;
 
     free(*randomPointer);
@@ -100,6 +100,7 @@ double computeDistance(double latitude1, double longitude1, double latitude2, do
     double sinLongitude = sin(radians((longitude1 - longitude2) * 0.5));
     return 6371 * 2 * asin(sqrt(sinLatitude * sinLatitude + cosLatitude1 * cosLatitude2 * sinLongitude * sinLongitude));
 }
+
 
 
 

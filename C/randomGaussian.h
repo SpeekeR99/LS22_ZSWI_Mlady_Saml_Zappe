@@ -11,16 +11,16 @@ typedef struct {
     double nextValue;
     double mean;
     double stdDev;
-}random;
+}GaussRandom;
 
 
-random *createRandom(double mean, double stdDev);
-double randomGaussian(random *randomPointer);
+GaussRandom *createRandom(double mean, double stdDev);
+double randomGaussian(GaussRandom *randomPointer);
 double randomDouble();
-double nextNormalDistDouble(random *randomPointer);
-double nextNormalDistDouble2(random *randomPointer);
-double nextNormalDistDoubleFaster(random *randomPointer);
-void freeRandom(random **randomPointer);
+double nextNormalDistDouble(GaussRandom *randomPointer);
+double nextNormalDistDouble2(GaussRandom *randomPointer);
+double nextNormalDistDoubleFaster(GaussRandom *randomPointer);
+void freeRandom(GaussRandom **randomPointer);
 double computeDistance(double latitude1, double longitude1, double latitude2, double longitude2);
 
 #endif //ZSWI_RANDOMGAUSSIAN_H
