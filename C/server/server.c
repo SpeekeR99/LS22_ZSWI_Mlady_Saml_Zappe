@@ -2,14 +2,22 @@
 #include <stdio.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <unistd.h>
+/*
 #include "serv_functions.h"
+#include "D:\_skola\ZSWI\PRJ\fem-like-spreading-modelling\C\server\serv_functions.h"
+*/
+#include "D:\_skola\ZSWI\PRJ\fem-like-spreading-modelling\C\server\serv_functions.h"
 
 #define DEF_IP "127.0.0.1"
 #define DEF_PORT 4242
+#define MSG_MAX_LEN 2048
+#define CMD_MAX_LEN 14
 
 /*-------- PROGRAM ARGUMENTS */
 
@@ -26,7 +34,7 @@ char *available_args[ARGNUM] = {"-port", "-ip4"};
 char *cmds[CMDNUM] = {"hello","add", "out"};
 /* The array of functions invoked by commands
     The functions return void * if they return anything and accept 
-    the conffd and additional args stored as void * 
+    the connfd and additional args stored as void * 
     functions are defined in a separate file 
     (serv_function.h in this case) */
 void *(*cmd_fns[CMDNUM])(int, void *) = {&hello,&add, &out};
@@ -41,7 +49,7 @@ void *(*cmd_fns[CMDNUM])(int, void *) = {&hello,&add, &out};
  * @return The sockfd (int) of the listening socket, ready to accept a client
  * The queue of pending connections is of length 5, but only 1 client should request communication
  */
-int create_listen_socket(char *IP, int port){
+int create_listen_socket(const char *IP, int port){
     /* Code by Yogesh Shukla et al. on GeeksforGeeks.org */
     /* https://www.geeksforgeeks.org/tcp-server-client-implementation-in-c/ */
 
@@ -109,23 +117,37 @@ int create_connection(int sockfd){
 }
 
 /**
- * @DEPRACETED - just reimplements memcpy lol
+ * @brief The infinite loop for communication with the client
+ *        Client sends command and arguments, server does the command
  * 
- * @brief Sets the value to the destination in memory, both of witch share common size in bytes
- * 
- * @param value ptr to the value
- * @param dest  ptr to the locacion in memory where to store the value
- * @param size_of_val_and_dest the length of the two in bytes
+ * @param connfd the connection's file descriptor
  */
-void set_arg_value(const void *value, void *dest, size_t sizeof_val_and_dest){
-    const unsigned char *bvalue = (const unsigned char *)value;
-    unsigned char *bdest = (unsigned char *)dest;
+void comm_loop(int connfd){
+    char bf[MSG_MAX_LEN] = {0};
+    char cmd[CMD_MAX_LEN] = {0};
 
-    for (size_t i = 0; i < sizeof_val_and_dest; i++)
+    //printf("Entering comm loop");
+    for (;;)
     {
-        bdest[i] = bvalue[i];
+        bzero(bf,MSG_MAX_LEN);
+        bzero(cmd, CMD_MAX_LEN);
+        read(connfd,bf,MSG_MAX_LEN);
+        sscanf(bf,"%s",cmd);
+        /* now: bf contains the recieved line, cmd the first word 
+           (should be a name of a command from cmds array) */
+
+        //printf("%s %s", bf, cmd);
+
+        for (size_t i = 0; i < CMDNUM; i++)
+            /* find command and call it with the connection file descriptor and the recieved line as its arguments */
+            if(!strcmp(cmds[i],cmd)){
+                printf("Calling command: %s\n", cmd);
+                cmd_fns[i](connfd,(void *)bf);
+                break;
+            }
+                
+        
     }
-    
 }
 
 /**
@@ -193,21 +215,12 @@ int main(int argc, char const *argv[])
 
     /* STARTING SERVER AND ESTABLISHING CONNECTION */
 
+    sockfd = create_listen_socket(ip, port);
+    connfd = create_connection(sockfd);
+    //printf("conn created\n");
 
-    char bf[80] = {0};
-    char *tkn;
-    for (;;)
-    {
-        bzero(bf,80);
-        fgets(bf,80,stdin);
-        sscanf(bf,"%s",tkn);
-
-        for (size_t i = 0; i < CMDNUM; i++)
-            if(!strcmp(cmds[i],tkn))
-                cmd_fns[i](0,(void *)bf);
-        
-    }
-    
+    /* CLIENT GIVES COMMANDS TO THE SERVER */
+    comm_loop(connfd);
 
 
     return 0;
