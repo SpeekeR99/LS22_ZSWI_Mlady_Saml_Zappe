@@ -4,6 +4,45 @@ import dash
 from dash import dcc, html, Input, Output, State
 import dash_bootstrap_components as dbc
 
+import socket
+import sys
+
+## ------------- CLIENT PART --------------------
+
+port = 4242 if len(sys.argv) != 3 else int(sys.argv[2])
+host_ip = "127.0.0.1" if len(sys.argv) != 3 else sys.argv[1]
+
+try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        print ("Socket successfully created")
+except socket.error as err:
+        print ("socket creation failed with error %s" %(err))
+        exit(0)
+
+try: 
+        s.connect((host_ip, port)) 
+except socket.gaierror as e: 
+        print ("Address-related error connecting to server: %s" % e) 
+        s.close()
+except socket.error as e: 
+        print ("Connection error: %s" % e) 
+        s.close()
+print("Client part connected")
+# client ready to send commands to the server
+# usage: a callback in the visualisation app (through a button perhaps)
+# the callback calls:
+# try:
+#    s.send(command_in_string.encode())
+# except socket.timeout as err:
+#        print("Error: Server timed out.")
+#        s.close()
+# except socket.error:
+#    print("Error: could not write to server.")
+#    s.close()
+
+
+
+## ------------- VISUALS PART --------------------
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])  # Bootstrap connection
 
 app.layout = html.Div(  # Main div
