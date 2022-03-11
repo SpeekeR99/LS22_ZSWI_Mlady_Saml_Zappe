@@ -1,5 +1,6 @@
 # vs code stuff
 .vscode/*
+*.exe
 
 # User-specific stuff
 .idea/**/workspace.xml
@@ -42,9 +43,6 @@
 
 # CMake
 cmake-build-*/
-
-# Make
-makefile*
 
 # Mongo Explorer plugin
 .idea/**/mongoSettings.xml
