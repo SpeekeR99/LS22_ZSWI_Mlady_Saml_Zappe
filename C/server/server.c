@@ -14,7 +14,7 @@
 */
 #include "D:\_skola\ZSWI\PRJ\fem-like-spreading-modelling\C\server\serv_functions.h"
 
-#define DEF_IP "127.0.0.1"
+#define DEF_IP NULL
 #define DEF_PORT 4242
 #define MSG_MAX_LEN 2048
 #define CMD_MAX_LEN 14
@@ -44,7 +44,7 @@ void *(*cmd_fns[CMDNUM])(int, void *) = {&hello,&add, &out};
 /**
  * @brief Creates a listening socket on supplied IP and port and returns its sockfd
  * 
- * @param IP The IP address to listen on
+ * @param IP The IP address to listen on. If null, INADDR_ANY is used.
  * @param port The port to listen on
  * @return The sockfd (int) of the listening socket, ready to accept a client
  * The queue of pending connections is of length 5, but only 1 client should request communication
@@ -69,7 +69,7 @@ int create_listen_socket(const char *IP, int port){
     memset(&servaddr, 0, sizeof(servaddr));   
     /* assign IP, PORT */
     servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr = inet_addr(IP);
+    servaddr.sin_addr.s_addr = IP ? inet_addr(IP) : htonl(INADDR_ANY);
     servaddr.sin_port = htons(port);
    
     /* Binding newly created socket to given IP and verification */
@@ -78,7 +78,7 @@ int create_listen_socket(const char *IP, int port){
         exit(0);
     }
     else
-        printf("Socket successfully binded to %s:%d\n", IP,port);
+        printf("Socket successfully binded.\n");
    
     /* Now server is ready to listen and verification */
     if ((listen(sockfd, 5)) != 0) {
@@ -209,7 +209,7 @@ int main(int argc, char const *argv[])
     if(args_indices[1])
         ip = argv[args_indices[1]];
     else
-        printf("Warning: IP not specified. Using default: %s.\n", ip=DEF_IP);    
+        printf("Warning: IP not specified. Using default: INADDR_ANY.\n"), ip=DEF_IP;    
 
     //printf("%s %i", ip, port);
 
