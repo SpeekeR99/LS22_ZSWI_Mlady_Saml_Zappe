@@ -1,6 +1,9 @@
 #ifndef FEM_LIKE_SPREADING_MODELLING_SIMULATION_H
 #define FEM_LIKE_SPREADING_MODELLING_SIMULATION_H
 #define stupidName 0.000061037018951994385
+#define LATITUDE_COLUMN_NAME "latitude"
+#define LONGITUDE_COLUMN_NAME "longitude"
+#define POPULATION_COLUMN_NAME "pocet_obyvatel"
 
 typedef struct {
     char hasNextValue;
@@ -24,19 +27,28 @@ typedef struct {
     char timeFrame;
 }citizen;
 
+typedef struct {
+    double lat;
+    double lon;
+    int population;
+}city;
+
 
 typedef struct {
-    int *citiesPopulation;
+    city **cities;
     int numberOfCities;
     citizen **citizens;
     int numberOfCitizens;
 }country;
 
+country* create_country_from_csv(const char *filepath);
 
 country *createCountry(int numberOfCities, int numberOfCitizens);
-citizen *createCitizen(int cityID);
+city *createCity(int population, double lat, double lon);
+citizen *createCitizen(short cityID);
 
 void freeCountry(country **theCountry);
+void freeCity(city **theCity);
 void freeCitizen(citizen **theCitizen);
 
 #endif //FEM_LIKE_SPREADING_MODELLING_SIMULATION_H

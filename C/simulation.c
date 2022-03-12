@@ -1,6 +1,9 @@
 #include <stdlib.h>
 #include <math.h>
+#include <stdio.h>
+#include <string.h>
 #include "simulation.h"
+
 #define radians(degrees) degrees * (M_PI / 180.0)
 
 
@@ -11,14 +14,14 @@ country *createCountry(int numberOfCities, int numberOfCitizens) {
     theCountry = malloc(sizeof(country));
     if (!theCountry) return NULL;
 
-    theCountry->citiesPopulation = malloc(numberOfCities * sizeof(int));
-    if (!theCountry->citiesPopulation) {
+    theCountry->cities = malloc(numberOfCities * sizeof(city *));
+    if (!theCountry->cities) {
         free(theCountry);
         return NULL;
     }
     theCountry->citizens = malloc(numberOfCitizens * sizeof(citizen *));
     if (!theCountry->citizens) {
-        free(theCountry->citiesPopulation);
+        free(theCountry->cities);
         free(theCountry);
         return NULL;
     }
@@ -27,11 +30,23 @@ country *createCountry(int numberOfCities, int numberOfCitizens) {
 
     return theCountry;
 }
-citizen *createCitizen(int cityID) {
+city *createCity(int population, double lat, double lon) {
+    city *theCity;
+    if (population < 0) return NULL;
+    theCity = calloc(1, sizeof(city));
+    if (!theCity) return NULL;
+    theCity->population = population;
+    theCity->lat = lat;
+    theCity->lon = lon;
+
+    return theCity;
+}
+citizen *createCitizen(short cityID) {
     citizen *theCitizen;
     if (cityID < 0) return NULL;
     theCitizen = calloc(1, sizeof(citizen));
     if (!theCitizen) return NULL;
+    theCitizen->cityID = cityID;
 
     return theCitizen;
 }
@@ -40,7 +55,11 @@ void freeCountry(country **theCountry) {
     int i;
     if (!theCountry || !*theCountry) return;
 
-    free((*theCountry)->citiesPopulation);
+    for (i = 0; i < (*theCountry)->numberOfCities; i++) {
+        if ((*theCountry)->cities[i]) {
+            freeCity(&(*theCountry)->cities[i]);
+        }
+    }
     for (i = 0; i < (*theCountry)->numberOfCitizens; i++) {
         if ((*theCountry)->citizens[i]) {
             freeCitizen(&(*theCountry)->citizens[i]);
@@ -50,6 +69,12 @@ void freeCountry(country **theCountry) {
     free(*theCountry);
     *theCountry = NULL;
 }
+void freeCity(city **theCity) {
+    if (!theCity || !*theCity) return;
+
+    free(*theCity);
+    *theCity = NULL;
+}
 void freeCitizen(citizen **theCitizen) {
     if (!theCitizen || !*theCitizen) return;
 
@@ -57,6 +82,114 @@ void freeCitizen(citizen **theCitizen) {
     *theCitizen = NULL;
 }
 
+/* ---------------------- START OF BLOCK : CREATE STRUCT COUNTRY FROM READING CSV ------------------------------------*/
+
+int number_of_citizens_from_csv(const char *filepath, int *number_of_cities) {
+    // Ini
+    FILE *fp = NULL;
+    int i = 0, column_index = -1, population = 0, cities = 0;
+    char buffer[255];
+    char *token;
+
+    // Opening csv file
+    fp = fopen(filepath, "r");
+    if (!fp) return -1;
+
+    // Reading first line
+    fgets(buffer, 255, fp);
+    token = strtok(buffer, ",");
+    // Determining which column has the population info
+    while(token) {
+        if (!strcmp(token, POPULATION_COLUMN_NAME)) column_index = i;
+        token = strtok(NULL, ",");
+        i++;
+    }
+    if (column_index == -1) return -1;
+
+    // Reading the rest and counting the total population
+    while(!feof(fp)) {
+        fgets(buffer, 255, fp);
+        token = strtok(buffer, ",");
+        for (i = 0; i < column_index; i++) token = strtok(NULL, ",");
+        population += atoi(token);
+        cities++;
+    }
+
+    // Closing csv file
+    if (fclose(fp) == EOF) return -1;
+
+    // Return values
+    *number_of_cities = cities;
+    return population;
+}
+
+int process_csv(country **the_country, const char *filepath) {
+    // Ini
+    FILE *fp = NULL;
+    double lon, lat;
+    int i = 0, citizen_index = 0, population_index = -1, lat_index = -1, lon_index = -1, population;
+    short city_index = 0;
+    char buffer[255];
+    char *token;
+
+    // Opening csv file
+    fp = fopen(filepath, "r");
+    if (!fp) return 0;
+
+    // Reading first line
+    fgets(buffer, 255, fp);
+    token = strtok(buffer, ",");
+    // Determining which columns are useful
+    while(token) {
+        if (!strcmp(token, POPULATION_COLUMN_NAME)) population_index = i;
+        if (!strcmp(token, LATITUDE_COLUMN_NAME)) lat_index = i;
+        if (!strcmp(token, LONGITUDE_COLUMN_NAME)) lon_index = i;
+        token = strtok(NULL, ",");
+        i++;
+    }
+    if (population_index == -1 || lat_index == -1 || lon_index == -1) return 0;
+
+    // Reading the rest and creating structs
+    while(!feof(fp)) {
+        fgets(buffer, 255, fp);
+        token = strtok(buffer, ",");
+        i = 0;
+        while(1) {
+            if (!token) break;
+            if (i == population_index) population = atoi(token);
+            if (i == lat_index) lat = atof(token);
+            if (i == lon_index) lon = atof(token);
+            token = strtok(NULL, ",");
+            i++;
+        }
+        (*the_country)->cities[city_index] = createCity(population, lat, lon);
+        for(i = 0; i < population_index; i++) {
+            (*the_country)->citizens[citizen_index] = createCitizen(city_index);
+            citizen_index++;
+        }
+        city_index++;
+    }
+
+    // Closing csv file
+    if (fclose(fp) == EOF) return 0;
+
+    return 1;
+}
+
+country* create_country_from_csv(const char *filepath) {
+    int number_of_cities;
+    int population = number_of_citizens_from_csv(filepath, &number_of_cities);
+
+    if (population < 0) return NULL;
+
+    country* temp = createCountry(number_of_cities, population);
+
+    process_csv(&temp, filepath);
+
+    return temp;
+}
+
+/* ---------------------- END OF BLOCK : CREATE STRUCT COUNTRY FROM READING CSV --------------------------------------*/
 
 double randomDouble() {
     return (double) rand() / RAND_MAX * 2 - 1;
@@ -163,5 +296,3 @@ double computeDistanceHaversine(double latitude1, double longitude1, double lati
     double sinLongitude = sin(radians((longitude1 - longitude2) * 0.5));
     return 6371 * 2 * asin(sqrt(sinLatitude * sinLatitude + cosLatitude1 * cosLatitude2 * sinLongitude * sinLongitude));
 }
-
-
