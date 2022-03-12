@@ -19,7 +19,10 @@ double randomDouble();
 int nextNormalDistDouble(GaussRandom *randomPointer, double *doublePointer);
 int nextNormalDistDoubleFaster(GaussRandom *randomPointer, double *doublePointer);
 void freeRandom(GaussRandom **randomPointer);
+
 double computeDistanceHaversine(double latitude1, double longitude1, double latitude2, double longitude2);
+double compute_distance(double latitude1, double longitude1, double latitude2, double longitude2);
+
 
 typedef struct {
     short cityID;
@@ -33,7 +36,6 @@ typedef struct {
     int population;
 }city;
 
-
 typedef struct {
     city **cities;
     int numberOfCities;
@@ -41,12 +43,11 @@ typedef struct {
     int numberOfCitizens;
 }country;
 
-country* create_country_from_csv(const char *filepath);
 
+country* create_country_from_csv(const char *filepath);
 country *createCountry(int numberOfCities, int numberOfCitizens);
 city *createCity(int population, double lat, double lon);
 citizen *createCitizen(short cityID);
-
 void freeCountry(country **theCountry);
 void freeCity(city **theCity);
 void freeCitizen(citizen **theCitizen);

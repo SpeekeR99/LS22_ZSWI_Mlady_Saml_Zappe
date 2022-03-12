@@ -296,3 +296,10 @@ double computeDistanceHaversine(double latitude1, double longitude1, double lati
     double sinLongitude = sin(radians((longitude1 - longitude2) * 0.5));
     return 6371 * 2 * asin(sqrt(sinLatitude * sinLatitude + cosLatitude1 * cosLatitude2 * sinLongitude * sinLongitude));
 }
+
+double compute_distance(double latitude1, double longitude1, double latitude2, double longitude2) {
+    double coef = 110.25;
+    double x = latitude2 - latitude1;
+    double y = (longitude2 - longitude1) * cos(radians(latitude1));
+    return coef * sqrt(x * x + y * y);
+}
