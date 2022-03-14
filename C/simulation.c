@@ -7,8 +7,13 @@
 
 #define radians(degrees) degrees * (M_PI / 180.0)
 
-
-
+/** This function is one step of simulation where the citizens are moving between different cities
+ *
+ * @param theCountry initialized country
+ * @param theGaussRandom gaussRandom struct with initialized mean and standard deviation
+ * @param distances array of cityDistances as big as number of cities in the coutry
+ * @return EXIT_SUCCESS or EXIT_FAILURE
+ */
 int simulationStep(country *theCountry, GaussRandom *theGaussRandom, cityDistance **distances) {
     int i;
     int j;
@@ -23,33 +28,53 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom, cityDistanc
     doublePointer = malloc(sizeof (double));
     if (!doublePointer) return EXIT_FAILURE;
 
+    //go through all cities
     for (i = 0; i < theCountry->numberOfCities; i++) {
         theCity = theCountry->cities[i];
         computeDistances(i, theCountry, distances);
         qsort(distances, theCountry->numberOfCities, sizeof(cityDistance *), cmpCitiesByDistance);
+
+        //go through all citizens in a city
         for (j = 0; j < theCity->citizens->size; j++) {
             theList = theCity->citizens->array[j];
 
-            //todo jedem po dvou
+            //todo takes just 50% of citizens
             for (k = 0; k < theList->filledItems; k += 2) {
                 theCitizen = (citizen *) arrayListGetPointer(theList, k);
 
-                //neco aby se jeden nepresouval porad dokola
+                //something to stop one citizen to move more than once per step (will be somehow changed)
                 if (theCitizen->timeFrame == -1) continue;
                 theCitizen->timeFrame = -1;
 
-                nextNormalDistDouble(theGaussRandom, doublePointer);
+                //maybe we could delete this, what can possibly happen :)
+                if (nextNormalDistDouble(theGaussRandom, doublePointer) == EXIT_FAILURE) {
+                    free(doublePointer);
+                    return EXIT_FAILURE;
+                }
+
+                //finds city which is the closest (not really) to the distance which citizen should travel
                 index = interpolationSearch(*doublePointer, theCountry->numberOfCities, distances);
 
+                //move the citizen from one city to another
                 hashTableRemoveElement(j, k, theCity->citizens);
                 hashTableAddElement(theCitizen, theCitizen->id, theCountry->cities[index]->citizens);
             }
         }
     }
 
+    free(doublePointer);
     return EXIT_SUCCESS;
 }
 
+/**
+ * This function computes distances (not with haversine, but with the faster function)
+ * to all cities in theCountry from city at cityIndex and saves them in the distances
+ * array
+ * @param cityIndex index of the city from which the distances are calculated
+ * @param theCountry wrapper of all the cities
+ * @param distances initialized array, can contain some data, they will be overwritten,
+ *                  must have the same size as number of cities in the Country
+ */
 void computeDistances(int cityIndex, country *theCountry, cityDistance **distances) {
     int i;
     double distance;
@@ -58,18 +83,21 @@ void computeDistances(int cityIndex, country *theCountry, cityDistance **distanc
 
     theCity = theCountry->cities[cityIndex];
 
+    //all cities before city at cityIndex
     for (i = 0; i < cityIndex; i++) {
         distance = compute_distance(theCity, theCountry->cities[i]);
         distances[i]->distance = distance;
         distances[i]->id = i;
     }
 
+    //all cities after city at cityIndex
     for (i = cityIndex + 1; i < theCountry->numberOfCities; i++) {
         distance = compute_distance(theCity, theCountry->cities[i]);
         distances[i]->distance = distance;
         distances[i]->id = i;
     }
 
+    //make city at cityIndex unreachable
     distances[cityIndex]->distance = DBL_MAX;
     distances[cityIndex]->id = cityIndex;
 }
@@ -97,6 +125,7 @@ country *createCountry(int numberOfCities) {
 
     return theCountry;
 }
+
 city *createCity(int population, double lat, double lon) {
     city *theCity;
     if (population < 0) return NULL;
@@ -114,6 +143,7 @@ city *createCity(int population, double lat, double lon) {
 
     return theCity;
 }
+
 citizen *createCitizen(int id) {
     citizen *theCitizen;
     if (id < 0) return NULL;
@@ -142,6 +172,7 @@ void freeCountry(country **theCountry) {
     free(*theCountry);
     *theCountry = NULL;
 }
+
 void freeCity(city **theCity) {
     if (!theCity || !*theCity) return;
 
@@ -149,6 +180,7 @@ void freeCity(city **theCity) {
     free(*theCity);
     *theCity = NULL;
 }
+
 void freeCitizen(citizen **theCitizen) {
     if (!theCitizen || !*theCitizen) return;
 
@@ -402,6 +434,7 @@ int interpolationSearch(double distance, int citiesSize, cityDistance **cityDist
 
     return left;
 }
+
 double compute_distance(city *firstCity, city *secondCity) {
     double coef = 110.25;
     double x = secondCity->lat - firstCity->lat;
@@ -427,7 +460,5 @@ void freeCityDistance(cityDistance **theCityDistance) {
 
 int cmpCitiesByDistance(const void *a, const void *b) {
     return (*(cityDistance **) a)->distance < (*(cityDistance **) b)->distance ? -1 : 1;
-
-//    return (((cityDistance *) a)->distance < ((cityDistance *) b)->distance) ? -1 : 1;
 }
 
