@@ -131,7 +131,10 @@ void comm_loop(int connfd){
     {
         bzero(bf,MSG_MAX_LEN);
         bzero(cmd, CMD_MAX_LEN);
-        read(connfd,bf,MSG_MAX_LEN);
+        if(!read(connfd,bf,MSG_MAX_LEN)){
+            printf("Connection lost\n");
+            return;
+        }
         sscanf(bf,"%s",cmd);
         /* now: bf contains the recieved line, cmd the first word 
            (should be a name of a command from cmds array) */
@@ -145,7 +148,8 @@ void comm_loop(int connfd){
                 cmd_fns[i](connfd,(void *)bf);
                 break;
             }
-                
+
+            printf("Message recieved, but was not command: %s\n", bf);                
         
     }
 }
@@ -213,14 +217,16 @@ int main(int argc, char const *argv[])
 
     //printf("%s %i", ip, port);
 
-    /* STARTING SERVER AND ESTABLISHING CONNECTION */
+    /* STARTING SERVER */
 
     sockfd = create_listen_socket(ip, port);
-    connfd = create_connection(sockfd);
-    //printf("conn created\n");
 
-    /* CLIENT GIVES COMMANDS TO THE SERVER */
-    comm_loop(connfd);
+    /* Indefinitely, accept a connection and then enter a communication loop with the client
+       in the communication, the client gives commands to the server */
+    for(;;){
+        connfd = create_connection(sockfd);
+        comm_loop(connfd);
+    }
 
 
     return 0;

@@ -12,11 +12,13 @@ void *out(int connfd, void *arg){
 }
 
 void *start_simulation(int connfd, void *arg){
-    
+
 }
 
 void *send_data_from_simulation(int connfd, void *arg){
-
+    char bff[128] = {0};
+    sprintf(bff,"Naceradec,530212,49.610286,14.906434,%d,256",rand());
+    write(connfd, bff, strlen(bff));
 }
 
 #endif
