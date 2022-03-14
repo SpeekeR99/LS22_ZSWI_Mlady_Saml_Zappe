@@ -21,13 +21,13 @@ except socket.error as err:
 
 try: 
         s.connect((host_ip, port)) 
+        print("Client part connected")
 except socket.gaierror as e: 
         print ("Address-related error connecting to server: %s" % e) 
         s.close()
 except socket.error as e: 
         print ("Connection error: %s" % e) 
         s.close()
-print("Client part connected")
 # client ready to send commands to the server
 # usage: a callback in the visualisation app (through a button perhaps)
 # the callback calls:
@@ -168,7 +168,7 @@ def update_figure(update_input, reset_input, z_coef, radius_coef, curr_fig):
         z_coef = 8
         radius_coef = 2.5
 
-    df = pd.read_csv("data/merged.csv")  # Reading the main data here
+    df = pd.read_csv("../DATA/merged.csv")  # Reading the main data here
 
     fig = px.density_mapbox(  # Creating new figure
         df,

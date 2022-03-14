@@ -31,13 +31,13 @@ char *available_args[ARGNUM] = {"-port", "-ip4"};
 
 #define CMDNUM 3
 /* The array of commands */
-char *cmds[CMDNUM] = {"hello","add", "out"};
+char *cmds[CMDNUM] = {"send_data","start","out"};
 /* The array of functions invoked by commands
     The functions return void * if they return anything and accept 
     the connfd and additional args stored as void * 
     functions are defined in a separate file 
     (serv_function.h in this case) */
-void *(*cmd_fns[CMDNUM])(int, void *) = {&hello,&add, &out};
+void *(*cmd_fns[CMDNUM])(int, void *) = {&send_data_from_simulation,&start_simulation,&out};
 
 /* -------- CODE SECTION */
 
