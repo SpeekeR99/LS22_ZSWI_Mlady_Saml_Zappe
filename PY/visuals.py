@@ -7,33 +7,35 @@ import dash_bootstrap_components as dbc
 import socket
 import sys
 
-## ------------- CLIENT PART --------------------
+# ------------- CLIENT PART --------------------
 
 port = 4242 if len(sys.argv) != 3 else int(sys.argv[2])
 host_ip = "127.0.0.1" if len(sys.argv) != 3 else sys.argv[1]
 SOCKET_BUFFER_SIZE = 4194304
 
-def create_and_connect_socket(): 
-    try:
-            sockfd = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            print ("Socket successfully created")
-    except socket.error as err:
-            print ("socket creation failed with error %s" %(err))
-            return None
 
-    try: 
-            sockfd.connect((host_ip, port)) 
-            print("Client part connected")
-    except socket.gaierror as e: 
-            print ("Address-related error connecting to server: %s" % e) 
-            sockfd.close()
-            return None
-    except socket.error as e: 
-            print ("Connection error: %s" % e) 
-            sockfd.close()
-            return None
+def create_and_connect_socket():
+    try:
+        sockfd = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        print("Socket successfully created")
+    except socket.error as err:
+        print("socket creation failed with error %s" % err)
+        return None
+
+    try:
+        sockfd.connect((host_ip, port))
+        print("Client part connected")
+    except socket.gaierror as e:
+        print("Address-related error connecting to server: %s" % e)
+        sockfd.close()
+        return None
+    except socket.error as e:
+        print("Connection error: %s" % e)
+        sockfd.close()
+        return None
     return sockfd
-    
+
+
 # client ready to send commands to the server
 # usage: a callback in the visualisation app (through a button perhaps)
 # the callback calls:
@@ -47,12 +49,14 @@ def create_and_connect_socket():
 #    s.close()
 
 
-## ------------- VISUALS PART --------------------
+# ------------- VISUALS PART --------------------
 
 DEFAULT_Z_COEF = 5  # 8
 DEFAULT_RADIUS_COEF = 18.2  # 18.5
+FILEPATH = "../DATA/merged.csv"
 
-def create_default_figure(filepath="../DATA/merged.csv", z_coef=DEFAULT_Z_COEF, radius_coef=DEFAULT_RADIUS_COEF):
+
+def create_default_figure(filepath=FILEPATH, z_coef=DEFAULT_Z_COEF, radius_coef=DEFAULT_RADIUS_COEF):
     """
     Creates default figure containing the map from csv data file
     :param filepath: Path to data csv file
@@ -77,6 +81,7 @@ def create_default_figure(filepath="../DATA/merged.csv", z_coef=DEFAULT_Z_COEF, 
     )
     fig.update_layout(hoverlabel=dict(bgcolor="white", font_size=16, font_family="Inter"))
     return fig
+
 
 app = DashProxy(
     prevent_initial_callbacks=True,
@@ -173,14 +178,15 @@ app.layout = html.Div(  # Main div
     ]
 )
 
-def remain_figure_state(new_fig, old_fig, z_slider=False, radius_slider=False):
+
+def remain_figure_state(new_fig, old_fig, z_slider_trigger=False, radius_slider_trigger=False):
     """
     Restores user important data, such as where the user is located now and how much has he zoomed
     Because with every figure update, every information is lost and figure would be reset to default
     :param new_fig: New future figure
     :param old_fig: Current state of the figure before updating
-    :param z_slider: Z magnitude slider, if user used this, don't update from the old state
-    :param radius_slider: Radius slider, if user used this, don't update from the old state
+    :param z_slider_trigger: Z magnitude slider, if user used this, don't update from the old state
+    :param radius_slider_trigger: Radius slider, if user used this, don't update from the old state
     :return: Figure that has new dataframe, but old characteristics (such as zoom and animation frame...)
     """
     if old_fig is not None:
@@ -192,14 +198,15 @@ def remain_figure_state(new_fig, old_fig, z_slider=False, radius_slider=False):
         new_fig["data"][0].lat = old_fig["data"][0]["lat"]
         new_fig["data"][0].lon = old_fig["data"][0]["lon"]
         new_fig["data"][0].name = old_fig["data"][0]["name"]
-        if not radius_slider:  # If the user used the radius slider, don't use the old value
+        if not radius_slider_trigger:  # If the user used the radius slider, don't use the old value
             new_fig["data"][0].radius = old_fig["data"][0]["radius"]
-        if not z_slider:  # If the user used the z slider, don't use the old value
+        if not z_slider_trigger:  # If the user used the z slider, don't use the old value
             new_fig["data"][0].z = old_fig["data"][0]["z"]
         new_fig["data"][0].subplot = old_fig["data"][0]["subplot"]
         new_fig["layout"]["mapbox"]["center"] = old_fig["layout"]["mapbox"]["center"]
         new_fig["layout"]["mapbox"]["zoom"] = old_fig["layout"]["mapbox"]["zoom"]
     return new_fig
+
 
 @app.callback(
     Output("map", "figure"),
@@ -216,22 +223,22 @@ def update_button(update_input, curr_fig):
 
     try:
         sockfd.send("send_data".encode())
-    except socket.timeout as err:
+    except socket.timeout:
         print("Error: Server timed out.")
         sockfd.close()
     except socket.error:
         print("Error: could not write to server.")
         sockfd.close()
     csv_data = sockfd.recv(SOCKET_BUFFER_SIZE).decode('ascii').rstrip('\x00\x0a\x0D')
-    filname = "../DATA/merged.csv"
     sockfd.close()
 
-    with open(filname, "a") as f:
-        f.write("\n"+csv_data)
-    
-    fig = create_default_figure(filname)
+    with open(FILEPATH, "a") as f:
+        f.write("\n" + csv_data)
+
+    fig = create_default_figure()
     fig = remain_figure_state(fig, curr_fig)
     return fig
+
 
 @app.callback(
     Output("map", "figure"),
@@ -247,6 +254,7 @@ def reset_button(reset_input):
     """
     return create_default_figure(), DEFAULT_Z_COEF, DEFAULT_RADIUS_COEF
 
+
 @app.callback(
     Output("map", "figure"),
     Input("z-slider", "value"),
@@ -259,8 +267,9 @@ def z_slider(z_coef, curr_fig):
     :return: Figure with updated z magnitude value
     """
     fig = create_default_figure(z_coef=z_coef)
-    fig = remain_figure_state(fig, curr_fig, z_slider=True)
+    fig = remain_figure_state(fig, curr_fig, z_slider_trigger=True)
     return fig
+
 
 @app.callback(
     Output("map", "figure"),
@@ -274,8 +283,9 @@ def radius_slider(radius_coef, curr_fig):
     :return: Figure with updated radius value
     """
     fig = create_default_figure(radius_coef=radius_coef)
-    fig = remain_figure_state(fig, curr_fig, radius_slider=True)
+    fig = remain_figure_state(fig, curr_fig, radius_slider_trigger=True)
     return fig
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
