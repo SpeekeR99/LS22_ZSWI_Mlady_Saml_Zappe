@@ -23,6 +23,7 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom, cityDistanc
     city *theCity;
     arrayList *theList;
     citizen *theCitizen;
+
     if (!theCountry || !theGaussRandom || !distances) return EXIT_FAILURE;
 
     doublePointer = malloc(sizeof (double));
@@ -62,7 +63,14 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom, cityDistanc
         }
     }
 
-    free(doublePointer);
+    for (i = 0; i < theCountry->numberOfCities; i++) {
+        theCountry->cities[i]->population = theCountry->cities[i]->citizens->filledItems;
+    }
+
+
+
+
+        free(doublePointer);
     return EXIT_SUCCESS;
 }
 
