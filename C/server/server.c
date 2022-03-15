@@ -149,7 +149,7 @@ void comm_loop(int connfd){
                 break;
             }
 
-            printf("Message recieved, but was not command: %s\n", bf);                
+            //printf("Message recieved, but was not command: %s\n", bf);                
         
     }
 }
