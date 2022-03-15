@@ -38,13 +38,13 @@ def create_and_connect_socket():
 # usage: a callback in the visualisation app (through a button perhaps)
 # the callback calls:
 # try:
-#    s.send(command_in_string.encode())
+#    sockfd.send(command_in_string.encode())
 # except socket.timeout as err:
 #        print("Error: Server timed out.")
-#        s.close()
+#        sockfd.close()
 # except socket.error:
 #    print("Error: could not write to server.")
-#    s.close()
+#    sockfd.close()
 
 
 ## ------------- VISUALS PART --------------------
