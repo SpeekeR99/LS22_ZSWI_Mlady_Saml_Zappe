@@ -1,3 +1,5 @@
+import platform
+import ctypes
 import plotly.express as px
 import pandas as pd
 from dash import dcc, html
@@ -51,8 +53,11 @@ def create_and_connect_socket():
 
 # ------------- VISUALS PART --------------------
 
+SCALE_FACTOR = 1.25
+if platform.uname()[0] == "Windows":
+    SCALE_FACTOR = ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100
 DEFAULT_Z_COEF = 5  # 8
-DEFAULT_RADIUS_COEF = 18.2  # 18.5
+DEFAULT_RADIUS_COEF = 19.7 - 1.2 * SCALE_FACTOR  # 18.5 (100%) 18.2 (125%)
 FILEPATH = "../DATA/merged.csv"
 
 
@@ -76,7 +81,7 @@ def create_default_figure(filepath=FILEPATH, z_coef=DEFAULT_Z_COEF, radius_coef=
         animation_frame="datum",
         mapbox_style="open-street-map",
         center=dict(lat=49.88537, lon=15.3684),
-        zoom=6,  # 6.6
+        zoom=9 - 2.4 * SCALE_FACTOR,  # 6.6 (100%) 6 (125%)
         color_continuous_scale="plasma"
     )
     fig.update_layout(hoverlabel=dict(bgcolor="white", font_size=16, font_family="Inter"))
@@ -163,7 +168,7 @@ app.layout = html.Div(  # Main div
                         )
                     ],
                     style={
-                        "margin-top": "350px",
+                        "margin-top": str(1350 - 800 * SCALE_FACTOR) + "px",
                         "justify-content": "center",
                         "align-items": "center",
                         "display": "flex"}),
