@@ -4,11 +4,6 @@
 #define FAILURE 0
 #define SUCCESS 1
 
-/* ____________________________________________________________________________
-
-    Structures and Datatypes
-   ____________________________________________________________________________
-*/
 typedef unsigned int uint;
 typedef struct {
     uint listSize;
@@ -17,11 +12,7 @@ typedef struct {
     uint filledItems;
 } arrayList;
 
-/* ____________________________________________________________________________
 
-    Function Prototypes
-   ____________________________________________________________________________
-*/
 arrayList *createArrayList(int listSize, int itemSize);
 int arrayListAdd(arrayList *list, void *pointer);
 int arrayListExpand(arrayList *list, int increment);

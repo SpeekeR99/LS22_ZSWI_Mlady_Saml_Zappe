@@ -2,6 +2,7 @@
 #include <math.h>
 #include <float.h>
 #include "simulation.h"
+#include "random.h"
 
 #define radians(degrees) degrees * (M_PI / 180.0)
 
@@ -9,10 +10,9 @@
  *
  * @param theCountry initialized country
  * @param theGaussRandom gaussRandom struct with initialized mean and standard deviation
- * @param distances array of cityDistances as big as number of cities in the coutry
  * @return EXIT_SUCCESS or EXIT_FAILURE
  */
-int simulationStep(country *theCountry, GaussRandom *theGaussRandom, cityDistance **distances) {
+int simulationStep(country *theCountry, GaussRandom *theGaussRandom) {
     int i;
     int j;
     int k;
@@ -22,7 +22,7 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom, cityDistanc
     arrayList *theList;
     citizen *theCitizen;
 
-    if (!theCountry || !theGaussRandom || !distances) return EXIT_FAILURE;
+    if (!theCountry || !theGaussRandom) return EXIT_FAILURE;
 
     doublePointer = malloc(sizeof(double));
     if (!doublePointer) return EXIT_FAILURE;
@@ -30,8 +30,8 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom, cityDistanc
     //go through all cities
     for (i = 0; i < theCountry->numberOfCities; i++) {
         theCity = theCountry->cities[i];
-        computeDistances(i, theCountry, distances);
-        qsort(distances, theCountry->numberOfCities, sizeof(cityDistance *), cmpCitiesByDistance);
+        computeDistances(i, theCountry);
+        qsort(theCountry->distances, theCountry->numberOfCities, sizeof(cityDistance *), cmpCitiesByDistance);
 
         //go through all citizens in a city
         for (j = 0; j < theCity->citizens->size; j++) {
@@ -52,7 +52,7 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom, cityDistanc
                 }
 
                 //finds city which is the closest (not really) to the distance which citizen should travel
-                index = interpolationSearch(*doublePointer, theCountry->numberOfCities, distances);
+                index = interpolationSearch(*doublePointer, theCountry->numberOfCities, theCountry->distances);
 
                 //move the citizen from one city to another
                 hashTableRemoveElement(j, k, theCity->citizens);
@@ -61,10 +61,10 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom, cityDistanc
         }
     }
 
+    //update population of cities to current state
     for (i = 0; i < theCountry->numberOfCities; i++) {
         theCountry->cities[i]->population = theCountry->cities[i]->citizens->filledItems;
     }
-
 
     free(doublePointer);
     return EXIT_SUCCESS;
@@ -76,37 +76,42 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom, cityDistanc
  * array
  * @param cityIndex index of the city from which the distances are calculated
  * @param theCountry wrapper of all the cities
- * @param distances initialized array, can contain some data, they will be overwritten,
- *                  must have the same size as number of cities in the Country
  */
-void computeDistances(int cityIndex, country *theCountry, cityDistance **distances) {
+void computeDistances(int cityIndex, country *theCountry) {
     int i;
     double distance;
     city *theCity;
-    if (cityIndex < 0 || !theCountry || !distances) return;
+    if (cityIndex < 0 || !theCountry) return;
 
     theCity = theCountry->cities[cityIndex];
 
     //all cities before city at cityIndex
     for (i = 0; i < cityIndex; i++) {
         distance = compute_distance(theCity, theCountry->cities[i]);
-        distances[i]->distance = distance;
-        distances[i]->id = i;
+        theCountry->distances[i]->distance = distance;
+        theCountry->distances[i]->id = i;
     }
 
     //all cities after city at cityIndex
     for (i = cityIndex + 1; i < theCountry->numberOfCities; i++) {
         distance = compute_distance(theCity, theCountry->cities[i]);
-        distances[i]->distance = distance;
-        distances[i]->id = i;
+        theCountry->distances[i]->distance = distance;
+        theCountry->distances[i]->id = i;
     }
 
     //make city at cityIndex unreachable
-    distances[cityIndex]->distance = DBL_MAX;
-    distances[cityIndex]->id = cityIndex;
+    theCountry->distances[cityIndex]->distance = DBL_MAX;
+    theCountry->distances[cityIndex]->id = cityIndex;
 }
 
+/**
+ * Creates new country with specified numberOfCities
+ * @param numberOfCities must be greater than zero
+ * @return pointer to country struct or NULL if parameter was invalid or it
+           wasn't possible to allocate memory
+ */
 country *createCountry(int numberOfCities) {
+    int i;
     country *theCountry;
     if (numberOfCities <= 0) return NULL;
 
@@ -118,23 +123,32 @@ country *createCountry(int numberOfCities) {
         free(theCountry);
         return NULL;
     }
-//    theCountry->citizens = malloc(numberOfCitizens * sizeof(citizen *));
-//    if (!theCountry->citizens) {
-//        free(theCountry->cities);
-//        free(theCountry);
-//        return NULL;
-//    }
-//    theCountry->numberOfCitizens = numberOfCitizens;
+
+    theCountry->distances = malloc(numberOfCities * sizeof(cityDistance *));
+    for (i = 0; i < numberOfCities; i++) {
+        theCountry->distances[i] = createCityDistance();
+    }
+
     theCountry->numberOfCities = numberOfCities;
 
     return theCountry;
 }
 
+/**
+ * Creates new city specified by parameters
+ * @param city_id unique identifier, must be non-negative
+ * @param population must be greater than zero
+ * @param lat in degrees, must be in interval <0, 90>
+ * @param lon in degrees, must be in interval <0, 180>
+ * @return pointer to city struct or NULL if parameters are invalid or it is
+ *         not possible to allocate memory
+ */
 city *createCity(int city_id, int population, double lat, double lon) {
     city *theCity;
-    if (population < 0) return NULL;
+    if (population <= 0) return NULL;
     theCity = calloc(1, sizeof(city));
     if (!theCity) return NULL;
+
     theCity->citizens = createHashTable(population / 10, sizeof(citizen *));
     if (!theCity->citizens) {
         free(theCity);
@@ -149,6 +163,12 @@ city *createCity(int city_id, int population, double lat, double lon) {
     return theCity;
 }
 
+/**
+ * Creates new citizen struct
+ * @param id must be unique and greater than zero
+ * @return pointer to new citizen or NULL if parameter is invalid or it is
+ *         not possible to allocate memory
+ */
 citizen *createCitizen(int id) {
     citizen *theCitizen;
     if (id < 0) return NULL;
@@ -159,6 +179,10 @@ citizen *createCitizen(int id) {
     return theCitizen;
 }
 
+/**
+ * Deallocates memory used by country struct
+ * @param theCountry pointer to pointer to struct country
+ */
 void freeCountry(country **theCountry) {
     int i;
     if (!theCountry || !(*theCountry)) return;
@@ -167,17 +191,19 @@ void freeCountry(country **theCountry) {
         if ((*theCountry)->cities[i]) {
             freeCity(&(*theCountry)->cities[i]);
         }
+        if ((*theCountry)->distances[i]) freeCityDistance(&(*theCountry)->distances[i]);
     }
-//    for (i = 0; i < (*theCountry)->numberOfCitizens; i++) {
-//        if ((*theCountry)->citizens[i]) {
-//            freeCitizen(&(*theCountry)->citizens[i]);
-//        }
-//    }
-//    free((*theCountry)->citizens);
+
+    free((*theCountry)->cities);
+    free((*theCountry)->distances);
     free(*theCountry);
     *theCountry = NULL;
 }
 
+/**
+ * Deallocates memory used by city struct
+ * @param theCity pointer to pointer to struct city
+ */
 void freeCity(city **theCity) {
     if (!theCity || !*theCity) return;
 
@@ -186,6 +212,10 @@ void freeCity(city **theCity) {
     *theCity = NULL;
 }
 
+/**
+ * Deallocates memory used by citizen struct
+ * @param theCitizen pointer to pointer to struct citizen
+ */
 void freeCitizen(citizen **theCitizen) {
     if (!theCitizen || !*theCitizen) return;
 
@@ -193,104 +223,15 @@ void freeCitizen(citizen **theCitizen) {
     *theCitizen = NULL;
 }
 
-
-double randomDouble() {
-    return (double) rand() / RAND_MAX * 2 - 1;
-}
-
-int randomGaussian(GaussRandom *randomPointer, double *doublePointer) {
-    double v1;
-    double v2;
-    double s;
-    double multiplier;
-
-    if (!randomPointer || !doublePointer) {
-        return EXIT_FAILURE;
-    }
-
-    if (randomPointer->hasNextValue) {
-        randomPointer->hasNextValue = 0;
-        *doublePointer = randomPointer->nextValue;
-        return EXIT_SUCCESS;
-    }
-
-    do {
-        v1 = randomDouble();
-        v2 = randomDouble();
-        s = (v1 * v1) + (v2 * v2);
-    } while (s >= 1 || s == 0);
-    multiplier = sqrt(-2 * log(s) / s);
-    randomPointer->hasNextValue = 1;
-    randomPointer->nextValue = v2 * multiplier;
-
-    *doublePointer = v1 * multiplier;
-    return EXIT_SUCCESS;
-
-}
-
-int nextNormalDistDouble(GaussRandom *randomPointer, double *doublePointer) {
-
-    if (!randomPointer || !doublePointer) {
-        return EXIT_FAILURE;
-    }
-
-    if (randomPointer->hasNextValue) {
-        randomPointer->hasNextValue = 0;
-        *doublePointer = randomPointer->mean + randomPointer->nextValue * randomPointer->stdDev;
-        return EXIT_SUCCESS;
-    }
-
-    if (randomGaussian(randomPointer, doublePointer) == EXIT_FAILURE) return EXIT_FAILURE;
-    *doublePointer = randomPointer->mean + *doublePointer * randomPointer->stdDev;
-    return EXIT_SUCCESS;
-}
-
-int nextNormalDistDoubleFaster(GaussRandom *randomPointer, double *doublePointer) {
-    double value1;
-    double value2;
-    double s;
-    double multiplier;
-
-    if (!randomPointer || !doublePointer) return EXIT_FAILURE;
-
-    if (randomPointer->hasNextValue) {
-        randomPointer->hasNextValue = 0;
-        *doublePointer = randomPointer->nextValue;
-        return EXIT_SUCCESS;
-    }
-
-    do {
-        value1 = (double) rand() * stupidName - 1;
-        value2 = (double) rand() * stupidName - 1;
-        s = (value1 * value1) + (value2 * value2);
-    } while (s >= 1 || s == 0);
-    multiplier = sqrt(-2 * log(s) / s) * randomPointer->stdDev;
-    randomPointer->hasNextValue = 1;
-    randomPointer->nextValue = randomPointer->mean + (value2 * multiplier);
-    *doublePointer = randomPointer->mean + (value1 * multiplier);
-    return EXIT_SUCCESS;
-}
-
-GaussRandom *createRandom(double mean, double stdDev) {
-    GaussRandom *newRandom;
-
-    newRandom = malloc(sizeof(GaussRandom));
-    if (newRandom) {
-        newRandom->hasNextValue = 0;
-        newRandom->stdDev = stdDev;
-        newRandom->mean = mean;
-    }
-
-    return newRandom;
-}
-
-void freeRandom(GaussRandom **randomPointer) {
-    if (!randomPointer || !*randomPointer) return;
-
-    free(*randomPointer);
-    *randomPointer = NULL;
-}
-
+/**
+ * Hardcore function to compute distance between two places on Earth (geoid), very time consuming
+ * but very precise. For our needs it is a bit overkill (in this moment ☹), maybe later alligator
+ * @param latitude1 in degrees, must be in interval <0, 90>
+ * @param longitude1 in degrees, must be in interval <0, 180>
+ * @param latitude2 in degrees, must be in interval <0, 90>
+ * @param longitude2 in degrees, must be in interval <0, 180>
+ * @return distance from one place to another in kilometers
+ */
 double computeDistanceHaversine(double latitude1, double longitude1, double latitude2, double longitude2) {
 
     double sinLatitude = sin(radians((latitude1 - latitude2) * 0.5));
@@ -300,6 +241,14 @@ double computeDistanceHaversine(double latitude1, double longitude1, double lati
     return 6371 * 2 * asin(sqrt(sinLatitude * sinLatitude + cosLatitude1 * cosLatitude2 * sinLongitude * sinLongitude));
 }
 
+/**
+ * Finds index in the array where the distance should be, if it would be placed
+ * in the array
+ * @param distance distance to be searched in array @param cityDistances
+ * @param citiesSize greater than zero
+ * @param cityDistances array of cityDistances with @param citiesSize length
+ * @return index in the array where @param distance should be
+ */
 int interpolationSearch(double distance, int citiesSize, cityDistance **cityDistances) {
     int left;
     int middle;
@@ -325,6 +274,15 @@ int interpolationSearch(double distance, int citiesSize, cityDistance **cityDist
     return left;
 }
 
+/**
+ * Computes distance between two cities based on geographic coordinates.
+ * Can be used only on smaller distances (eg. in Czech Republic it is ok, because
+ * Czech Republic is approximately 400x600 km big)
+ *
+ * @param firstCity not null
+ * @param secondCity not null
+ * @return distance from first city to second city in kilometers
+ */
 double compute_distance(city *firstCity, city *secondCity) {
     double coef = 110.25;
     double x = secondCity->lat - firstCity->lat;
@@ -332,7 +290,10 @@ double compute_distance(city *firstCity, city *secondCity) {
     return coef * sqrt(x * x + y * y);
 }
 
-
+/**
+ * Dummy function to create new cityDistance struct
+ * @return pointer to new struct or NULL if it was not possible to allocate memory
+ */
 cityDistance *createCityDistance() {
     cityDistance *theCityDistance;
     theCityDistance = malloc(sizeof(cityDistance));
@@ -341,6 +302,10 @@ cityDistance *createCityDistance() {
     return theCityDistance;
 }
 
+/**
+ * Dummy function to deallocate memory used by cityDistance
+ * @param theCityDistance pointer to pointer to cityDistance struct
+ */
 void freeCityDistance(cityDistance **theCityDistance) {
     if (!theCityDistance || !*theCityDistance) return;
 
@@ -348,6 +313,12 @@ void freeCityDistance(cityDistance **theCityDistance) {
     *theCityDistance = NULL;
 }
 
+/**
+ * Compares two cityDistances by their distance attribute
+ * @param a not null pointer to cityDistance struct
+ * @param b not null pointer to cityDistance struct
+ * @return -1 if a->distance is smaller than b->distance, else 1
+ */
 int cmpCitiesByDistance(const void *a, const void *b) {
     return (*(cityDistance **) a)->distance < (*(cityDistance **) b)->distance ? -1 : 1;
 }
