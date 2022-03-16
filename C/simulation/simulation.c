@@ -4,6 +4,10 @@
 #include "simulation.h"
 #include "random.h"
 
+#ifndef M_PI
+#    define M_PI 3.14159265358979323846
+#endif
+
 #define radians(degrees) degrees * (M_PI / 180.0)
 
 /** This function is one step of simulation where the citizens are moving between different cities

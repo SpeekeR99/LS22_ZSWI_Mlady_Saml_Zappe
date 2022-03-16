@@ -4,7 +4,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-#include "../simulation.h"
+#include "../simulation/simulation.h"
+
+#define SIMULATION_CSV_FILE "../../DATA/merged.csv"
+#define SEND_MAX_SIZE 4194304
 
 void *out(int connfd, void *arg){
     write(connfd, "exit", strlen("exit"));
@@ -12,13 +15,59 @@ void *out(int connfd, void *arg){
 }
 
 void *start_simulation(int connfd, void *arg){
+    /*
+    1. country *ctry = create_country_from_csv(filpath)
 
+    2. cityDistance **distances; 
+       *distances = malloc( ctry->numberOfCities * sizeof(cityDistance));
+
+    3. GaussRandom *grand = createRandom(double mean, double stdDev);
+
+    4. for(;;) simulationStep(ctry, grand, distances);
+
+    5. free ctry, distances and grand
+
+    */
 }
 
+/**
+ * @brief Sends the CSV data from the simulation. 
+ * The CSV is on a path specified by the SIMULATION_CSV_FILE constant defined at the top of this source file
+ * The CSV is sent as 4 MB* chunks of text until the end of the file - so the client might recieve more messages (if the csv is more than 4 MB)
+ * After the CSV is completely sent, server will send a string with only a char with the value 4 ('\x04' - ascii character for end of transmission)
+ * and then, the command is done
+ * 
+ * *4 MB = 4194304
+ * 
+ * @param connfd connection descriptor
+ * @param arg    array of additional arguments - unused (command name + arguments, space-separated)
+ * @return NULL
+ */
 void *send_data_from_simulation(int connfd, void *arg){
-    char bff[128] = {0};
-    sprintf(bff,"Naceradec,530212,49.610286,14.906434,%d,256",rand());
-    write(connfd, bff, strlen(bff));
+    char *bff = malloc(SEND_MAX_SIZE * sizeof(char));
+
+    FILE *csv = fopen(SIMULATION_CSV_FILE, "r");
+    int i = 0, next;
+    
+    /* go through all characters of the csv, filling the buffer
+       if buffer is full, send all its data, free it and continue from begining
+     */
+    while((next = fgetc(csv)) != EOF){
+        bff[i] = (char)next;
+
+        if(i == SEND_MAX_SIZE){
+            write(connfd,bff,SEND_MAX_SIZE);
+            bzero(bff, SEND_MAX_SIZE);
+            i = -1; /* next line of code will set this to 0 */
+        }
+        i++;
+    }
+    /* write the final part and then the end of transmission */
+    write(connfd,bff,SEND_MAX_SIZE);
+    write(connfd, "\x04",1);
+
+    free(bff);
+    return NULL;
 }
 
 #endif
