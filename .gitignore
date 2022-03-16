@@ -1,6 +1,7 @@
 # vs code stuff
-.vscode/*
+**/.vscode/*
 *.exe
+*.stackdump
 
 # User-specific stuff
 .idea/**/workspace.xml
