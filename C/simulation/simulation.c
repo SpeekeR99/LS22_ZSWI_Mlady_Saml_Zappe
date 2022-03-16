@@ -1,7 +1,5 @@
 #include <stdlib.h>
 #include <math.h>
-#include <stdio.h>
-#include <string.h>
 #include <float.h>
 #include "simulation.h"
 
@@ -27,9 +25,10 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom, cityDistanc
     city *theCity;
     arrayList *theList;
     citizen *theCitizen;
+
     if (!theCountry || !theGaussRandom || !distances) return EXIT_FAILURE;
 
-    doublePointer = malloc(sizeof (double));
+    doublePointer = malloc(sizeof(double));
     if (!doublePointer) return EXIT_FAILURE;
 
     //go through all cities
@@ -65,6 +64,11 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom, cityDistanc
             }
         }
     }
+
+    for (i = 0; i < theCountry->numberOfCities; i++) {
+        theCountry->cities[i]->population = theCountry->cities[i]->citizens->filledItems;
+    }
+
 
     free(doublePointer);
     return EXIT_SUCCESS;
@@ -130,7 +134,7 @@ country *createCountry(int numberOfCities) {
     return theCountry;
 }
 
-city *createCity(int population, double lat, double lon) {
+city *createCity(int city_id, int population, double lat, double lon) {
     city *theCity;
     if (population < 0) return NULL;
     theCity = calloc(1, sizeof(city));
@@ -141,6 +145,7 @@ city *createCity(int population, double lat, double lon) {
         return NULL;
     }
 
+    theCity->city_id = city_id;
     theCity->population = population;
     theCity->lat = lat;
     theCity->lon = lon;
@@ -160,7 +165,7 @@ citizen *createCitizen(int id) {
 
 void freeCountry(country **theCountry) {
     int i;
-    if (!theCountry || !*theCountry) return;
+    if (!theCountry || !(*theCountry)) return;
 
     for (i = 0; i < (*theCountry)->numberOfCities; i++) {
         if ((*theCountry)->cities[i]) {
@@ -192,121 +197,6 @@ void freeCitizen(citizen **theCitizen) {
     *theCitizen = NULL;
 }
 
-/* ---------------------- START OF BLOCK : CREATE STRUCT COUNTRY FROM READING CSV ------------------------------------*/
-
-int number_of_citizens_from_csv(const char *filepath, int *number_of_cities) {
-    // Ini
-    FILE *fp = NULL;
-    int i = 0, column_index = -1, population = 0, cities = 0;
-    char buffer[255];
-    char *token;
-
-    // Opening csv file
-    fp = fopen(filepath, "r");
-    if (!fp) return -1;
-
-    // Reading first line
-    fgets(buffer, 255, fp);
-    token = strtok(buffer, ",");
-    // Determining which column has the population info
-    while(token) {
-        if (!strcmp(token, POPULATION_COLUMN_NAME)) column_index = i;
-        token = strtok(NULL, ",");
-        i++;
-    }
-    if (column_index == -1) return -1;
-
-    // Reading the rest and counting the total population
-    while(!feof(fp)) {
-        fgets(buffer, 255, fp);
-        token = strtok(buffer, ",");
-        for (i = 0; i < column_index; i++) token = strtok(NULL, ",");
-        population += atoi(token);
-        cities++;
-    }
-
-    // Closing csv file
-    if (fclose(fp) == EOF) return -1;
-
-    // Return values
-    *number_of_cities = cities;
-    return population;
-}
-
-int process_csv(country **the_country, const char *filepath) {
-    // Ini
-    FILE *fp = NULL;
-    double lon, lat;
-    int i = 0, citizen_index = 0, population_index = -1, lat_index = -1, lon_index = -1, population;
-    short city_index = 0;
-    char buffer[255];
-    char *token;
-    city *theCity;
-    citizen *theCitizen;
-
-    // Opening csv file
-    fp = fopen(filepath, "r");
-    if (!fp) return 0;
-
-    // Reading first line
-    fgets(buffer, 255, fp);
-    token = strtok(buffer, ",");
-    // Determining which columns are useful
-    while(token) {
-        if (!strcmp(token, POPULATION_COLUMN_NAME)) population_index = i;
-        if (!strcmp(token, LATITUDE_COLUMN_NAME)) lat_index = i;
-        if (!strcmp(token, LONGITUDE_COLUMN_NAME)) lon_index = i;
-        token = strtok(NULL, ",");
-        i++;
-    }
-    if (population_index == -1 || lat_index == -1 || lon_index == -1) return 0;
-
-    // Reading the rest and creating structs
-    while(!feof(fp)) {
-        fgets(buffer, 255, fp);
-        token = strtok(buffer, ",");
-        i = 0;
-        while(1) {
-            if (!token) break;
-            if (i == population_index) population = atoi(token);
-            if (i == lat_index) lat = atof(token);
-            if (i == lon_index) lon = atof(token);
-            token = strtok(NULL, ",");
-            i++;
-        }
-        (*the_country)->cities[city_index] = createCity(population, lat, lon);
-        theCity = (*the_country)->cities[city_index];
-
-        for (i = 0; i < theCity->population; i++) {
-            theCitizen = createCitizen(citizen_index);
-            if (!theCitizen) return 0;
-            hashTableAddElement(theCitizen, citizen_index, theCity->citizens);
-            citizen_index++;
-        }
-
-        city_index++;
-    }
-
-    // Closing csv file
-    if (fclose(fp) == EOF) return 0;
-
-    return 1;
-}
-
-country* create_country_from_csv(const char *filepath) {
-    int number_of_cities;
-    int population = number_of_citizens_from_csv(filepath, &number_of_cities);
-
-    if (population < 0) return NULL;
-
-    country* temp = createCountry(number_of_cities);
-
-    process_csv(&temp, filepath);
-
-    return temp;
-}
-
-/* ---------------------- END OF BLOCK : CREATE STRUCT COUNTRY FROM READING CSV --------------------------------------*/
 
 double randomDouble() {
     return (double) rand() / RAND_MAX * 2 - 1;
@@ -426,7 +316,7 @@ int interpolationSearch(double distance, int citiesSize, cityDistance **cityDist
 
     while (cityDistances[left]->distance < distance && cityDistances[right]->distance >= distance) {
         middle = (int) (left + ((distance - cityDistances[left]->distance) * (right - left))
-                / (cityDistances[right]->distance - cityDistances[left]->distance));
+                               / (cityDistances[right]->distance - cityDistances[left]->distance));
         if (cityDistances[middle]->distance > distance) {
             right = middle - 1;
         } else if (cityDistances[middle]->distance < distance) {

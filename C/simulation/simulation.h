@@ -4,9 +4,6 @@
 #include "hashTable.h"
 
 #define stupidName 0.000061037018951994385
-#define LATITUDE_COLUMN_NAME "latitude"
-#define LONGITUDE_COLUMN_NAME "longitude"
-#define POPULATION_COLUMN_NAME "pocet_obyvatel"
 
 typedef struct {
     char hasNextValue;
@@ -24,6 +21,7 @@ typedef struct {
 typedef struct {
     double lat;
     double lon;
+    int city_id;
     int population;
     hashTable *citizens;
 }city;
@@ -39,14 +37,12 @@ typedef struct {
 }cityDistance;
 
 
-
 GaussRandom *createRandom(double mean, double stdDev);
 int randomGaussian(GaussRandom *randomPointer, double *doublePointer);
 double randomDouble();
 int nextNormalDistDouble(GaussRandom *randomPointer, double *doublePointer);
 int nextNormalDistDoubleFaster(GaussRandom *randomPointer, double *doublePointer);
 void freeRandom(GaussRandom **randomPointer);
-
 
 
 double computeDistanceHaversine(double latitude1, double longitude1, double latitude2, double longitude2);
@@ -62,9 +58,8 @@ void computeDistances(int cityIndex, country *theCountry, cityDistance **distanc
 int simulationStep(country *theCountry, GaussRandom *theGaussRandom, cityDistance **distances);
 
 
-country* create_country_from_csv(const char *filepath);
 country *createCountry(int numberOfCities);
-city *createCity(int population, double lat, double lon);
+city *createCity(int city_id, int population, double lat, double lon);
 citizen *createCitizen(int id);
 void freeCountry(country **theCountry);
 void freeCity(city **theCity);

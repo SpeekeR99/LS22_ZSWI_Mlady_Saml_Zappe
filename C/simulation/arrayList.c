@@ -134,10 +134,11 @@ void freeArrayList(arrayList **list) {
     int i;
     if (!list || !*list) return;
 
-    free((*list)->data);
     for (i = 0; i < (*list)->filledItems; i++) {
         if ((*list)->data[i]) free((*list)->data[i]);
     }
+
+    free((*list)->data);
     free(*list);
     *list = NULL;
 }
