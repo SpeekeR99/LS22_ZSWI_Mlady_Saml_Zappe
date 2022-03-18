@@ -2,7 +2,6 @@
 #include <math.h>
 #include <float.h>
 #include "simulation.h"
-#include "random.h"
 
 #ifndef M_PI
 #    define M_PI 3.14159265358979323846

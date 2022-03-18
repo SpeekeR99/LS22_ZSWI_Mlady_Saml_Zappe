@@ -26,6 +26,4 @@ GaussRandom *createRandom(double mean, double stdDev);
 
 void freeRandom(GaussRandom **randomPointer);
 
-#include "hashTable.h"
-
 #endif //FEM_LIKE_SPREADING_MODELLING_RANDOM_H
