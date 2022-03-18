@@ -327,3 +327,24 @@ int cmpCitiesByDistance(const void *a, const void *b) {
     return (*(cityDistance **) a)->distance < (*(cityDistance **) b)->distance ? -1 : 1;
 }
 
+/**
+ * @brief Initializes mandatory structs and starts the simulation, looping indefinetely
+ *        This function is possible to be passed as an argument to pthread_create()
+ * 
+ * @param args the arguments passed as an array (not used)
+ * @return void* the output returned as an array (always NULL)
+ */
+void *start_and_loop(void * args){
+    country *ctry = create_country_from_csv(SIMULATION_INI_CSV);
+    GaussRandom *grand = createRandom(MEAN, STDDEV);
+
+    /* filename: frameXXXX.csv = 13+1 chars = 14 (+1 = null term.) */
+    char *filename[14] = {0};
+
+    for(int date = 0 ;; date++) { 
+        sprintf(filename, CSV_NAME_FORMAT, date);
+        simulationStep(ctry, grand);
+        create_csv_from_country(ctry, filename, date);
+    }
+}
+

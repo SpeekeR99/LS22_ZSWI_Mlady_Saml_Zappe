@@ -7,7 +7,7 @@
 
 #define stupidName 0.000061037018951994385
 
-typedef struct {
+typedef  struct {
     char hasNextValue;
     double nextValue;
     double mean;
@@ -16,15 +16,15 @@ typedef struct {
 
 double randomDouble();
 
-int randomGaussian(anonymous struct *randomPointer, double *doublePointer);
+int randomGaussian(GaussRandom  *randomPointer, double *doublePointer);
 
-int nextNormalDistDouble(anonymous struct *randomPointer, double *doublePointer);
+int nextNormalDistDouble(GaussRandom  *randomPointer, double *doublePointer);
 
-int nextNormalDistDoubleFaster(anonymous struct *randomPointer, double *doublePointer);
+int nextNormalDistDoubleFaster(GaussRandom  *randomPointer, double *doublePointer);
 
-anonymous struct *createRandom(double mean, double stdDev);
+GaussRandom  *createRandom(double mean, double stdDev);
 
-void freeRandom(anonymous struct **randomPointer);
+void freeRandom(GaussRandom  **randomPointer);
 
 #include "hashTable.h"
 

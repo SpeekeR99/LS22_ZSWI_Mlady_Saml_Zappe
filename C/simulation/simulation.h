@@ -2,6 +2,13 @@
 #define FEM_LIKE_SPREADING_MODELLING_SIMULATION_H
 
 #include "hashTable.h"
+#include "random.h"
+
+#define SIMULATION_INI_CSV "../../DATA/merged.csv"
+#define CSV_NAME_FORMAT "frame%04i.csv"
+#define MEAN    20.0
+#define STDDEV  20.0
+
 
 typedef struct {
     int id;
@@ -38,7 +45,7 @@ void freeCityDistance(cityDistance **theCityDistance);
 
 int interpolationSearch(double distance, int citiesSize, cityDistance **cityDistances);
 void computeDistances(int cityIndex, country *theCountry);
-int simulationStep(country *theCountry, anonymous struct *theGaussRandom);
+int simulationStep(country *theCountry, GaussRandom *theGaussRandom);
 
 
 country *createCountry(int numberOfCities);
@@ -47,5 +54,8 @@ citizen *createCitizen(int id);
 void freeCountry(country **theCountry);
 void freeCity(city **theCity);
 void freeCitizen(citizen **theCitizen);
+
+
+void *start_and_loop(void * args);
 
 #endif //FEM_LIKE_SPREADING_MODELLING_SIMULATION_H
