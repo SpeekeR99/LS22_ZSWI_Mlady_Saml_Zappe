@@ -4,7 +4,7 @@
 #include "hashTable.h"
 #include "random.h"
 
-#define SIMULATION_INI_CSV "../../DATA/initial.csv"
+#define SIMULATION_INI_CSV "../DATA/initial.csv"
 #define CSV_NAME_FORMAT "frame%04i.csv"
 #define MEAN    20.0
 #define STDDEV  20.0
