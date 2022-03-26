@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <math.h>
 #include <float.h>
 #include "simulation.h"
@@ -349,7 +350,10 @@ void *start_and_loop(void * args){
     for(int date = 0 ;; date++) {
         sprintf(filename, CSV_NAME_FORMAT, date);
         simulationStep(ctry, grand);
-        create_csv_from_country(ctry, filename, date);
+        char filepath[100] = "../DATA/";
+        strcat(filepath, filename);
+        create_csv_from_country(ctry, filepath, date);
+        printf("%d\n", date);
     }
 }
 
