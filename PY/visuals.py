@@ -73,6 +73,14 @@ def create_data_hash_table(filepath="../DATA/initial.csv"):
 
 
 def update_data_csv(csv_data):
+    """
+    Appends new CSV files (frames) to the merged.csv main data file
+    Expected format is the same, as the output format from csvManager.c
+    So all that is needed from server is to copy the created framexxxx.csv file
+    and send all the lines as Strings to client, it will handle it well
+    :param csv_data: New csv data frame, expected format is the same as the output format from csvManager.c
+    :return: no return value
+    """
     with open(FILEPATH, "a", encoding="utf8") as fp:
         lines = csv_data.split("\n")
         for line in lines:
