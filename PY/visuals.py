@@ -1,6 +1,5 @@
 import platform
 import ctypes
-import time
 import plotly.express as px
 import pandas as pd
 from dash import dcc, html
@@ -101,8 +100,8 @@ def update_data_csv(csv_data):
     """
     if csv_data == "no data":
         return
-    global frame
-    frame = frame + 1
+    global FRAME
+    FRAME = FRAME + 1
     with open(FILEPATH, "a", encoding="utf8") as fp:
         lines = csv_data.split("\n")
         lines.pop(0)
@@ -130,9 +129,10 @@ if platform.uname()[0] == "Windows":
 DEFAULT_Z_COEF = 5  # 8
 DEFAULT_RADIUS_COEF = 19.7 - 1.2 * SCALE_FACTOR  # 18.5 (100%) 18.2 (125%)
 FILEPATH = "../DATA/merged.csv"
+FRAME = 0
 CITY_ID_HASH_TABLE = create_data_hash_table()
 initialize_merged_csv()
-frame = 0
+
 
 
 def create_default_figure(filepath=FILEPATH, z_coef=DEFAULT_Z_COEF, radius_coef=DEFAULT_RADIUS_COEF):
@@ -302,7 +302,7 @@ def update_button(update_input, curr_fig):
     sockfd = create_and_connect_socket()
 
     try:
-        sockfd.send(("send_data " + str(frame)).encode())
+        sockfd.send(("send_data " + str(FRAME)).encode())
     except socket.timeout:
         print("Error: Server timed out.")
         sockfd.close()
@@ -310,10 +310,7 @@ def update_button(update_input, curr_fig):
         print("Error: could not write to server.")
         sockfd.close()
     csv_data = sockfd.recv(SOCKET_BUFFER_SIZE).decode('ascii').rstrip('\x00\x0a\x0D')
-    time.sleep(0.5)
-    print("odpojuju")
     sockfd.close()
-    time.sleep(0.5)
     update_data_csv(csv_data)
 
     fig = create_default_figure()
