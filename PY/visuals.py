@@ -29,10 +29,12 @@ def create_and_connect_socket():
         print("Client part connected")
     except socket.gaierror as e:
         print("Address-related error connecting to server: %s" % e)
+        sockfd.shutdown(socket.SHUT_WR)
         sockfd.close()
         return None
     except socket.error as e:
         print("Connection error: %s" % e)
+        sockfd.shutdown(socket.SHUT_WR)
         sockfd.close()
         return None
     return sockfd
@@ -304,11 +306,14 @@ def update_button(update_input, curr_fig):
         sockfd.send(("send_data " + str(FRAME)).encode())
     except socket.timeout:
         print("Error: Server timed out.")
+        sockfd.shutdown(socket.SHUT_WR)
         sockfd.close()
     except socket.error:
         print("Error: could not write to server.")
+        sockfd.shutdown(socket.SHUT_WR)
         sockfd.close()
     csv_data = sockfd.recv(SOCKET_BUFFER_SIZE).decode('ascii').rstrip('\x00\x0a\x0D')
+    sockfd.shutdown(socket.SHUT_WR)
     sockfd.close()
     update_data_csv(csv_data)
 
@@ -367,5 +372,6 @@ def radius_slider(radius_coef, curr_fig):
 if __name__ == '__main__':
     sock = create_and_connect_socket()
     sock.send("start".encode())
+    sock.shutdown(socket.SHUT_WR)
     sock.close()
     app.run_server(debug=True)
