@@ -9,6 +9,6 @@
 #define CITY_ID_COLUMN_NAME "kod_obce"
 
 country *create_country_from_csv(const char *filepath);
-int create_csv_from_country(country *the_country, const char *filepath, const char *date);
+int create_csv_from_country(country *the_country, const char *filepath, int date);
 
 #endif

@@ -1,7 +1,11 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
 #include <float.h>
+#include <time.h>
 #include "simulation.h"
+#include "random.h"
+#include "csvManager.h"
 
 #ifndef M_PI
 #    define M_PI 3.14159265358979323846
@@ -334,16 +338,28 @@ int cmpCitiesByDistance(const void *a, const void *b) {
  * @return void* the output returned as an array (always NULL)
  */
 void *start_and_loop(void * args){
-    country *ctry = create_country_from_csv(SIMULATION_INI_CSV);
+    printf("in new thread\n");
+    country * ctry;
+    if (!(ctry = create_country_from_csv(SIMULATION_INI_CSV))){
+        printf("Could not open ini csv\n");
+        return 0;
+    }
+    printf("ini csv opened\n");    
+        
     GaussRandom *grand = createRandom(MEAN, STDDEV);
 
     /* filename: frameXXXX.csv = 13+1 chars = 14 (+1 = null term.) */
-    char *filename[14] = {0};
+    char filename[14] = {0};
+    clock_t start, end;
 
     for(int date = 0 ;; date++) { 
+        start = clock();
         sprintf(filename, CSV_NAME_FORMAT, date);
         simulationStep(ctry, grand);
         create_csv_from_country(ctry, filename, date);
+        end = clock();
+
+        printf("loop %i done in %f sec\n",date, ((double)(end-start))/CLOCKS_PER_SEC);
     }
 }
 

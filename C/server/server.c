@@ -12,7 +12,7 @@
 #include "serv_functions.h"
 #include "D:\_skola\ZSWI\PRJ\fem-like-spreading-modelling\C\server\serv_functions.h"
 */
-#include "D:\_skola\ZSWI\PRJ\fem-like-spreading-modelling\C\server\serv_functions.h"
+#include "serv_functions.h"
 
 #define DEF_IP NULL
 #define DEF_PORT 4242
