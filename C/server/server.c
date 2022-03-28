@@ -131,7 +131,7 @@ void comm_loop(int connfd){
     {
         bzero(bf,MSG_MAX_LEN);
         bzero(cmd, CMD_MAX_LEN);
-        while(!read(connfd,bf,MSG_MAX_LEN)){
+        if(!read(connfd,bf,MSG_MAX_LEN)){
             printf("Connection lost\n");
             return;
         }
