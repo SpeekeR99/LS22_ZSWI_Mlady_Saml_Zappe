@@ -353,7 +353,6 @@ void *start_and_loop(void * args){
         char filepath[100] = "../DATA/";
         strcat(filepath, filename);
         create_csv_from_country(ctry, filepath, date);
-        printf("%d\n", date);
     }
 }
 
