@@ -352,15 +352,15 @@ void *start_and_loop(void * args){
         printf("Could not open ini csv\n");
         return 0;
     }
-    printf("ini csv opened\n");    
-        
+    printf("ini csv opened\n");
+
     GaussRandom *grand = createRandom(MEAN, STDDEV);
 
     /* filename: frameXXXX.csv = 13+1 chars = 14 (+1 = null term.) */
     char filename[40] = {0};
     clock_t start, end;
 
-    for(int date = 0 ;; date++) { 
+    for(int date = 0 ;; date++) {
         start = clock();
         sprintf(filename, CSV_NAME_FORMAT, date);
         simulationStep(ctry, grand);

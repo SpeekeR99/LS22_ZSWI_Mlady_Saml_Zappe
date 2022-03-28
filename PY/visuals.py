@@ -98,8 +98,13 @@ def update_data_csv(csv_data):
     :param csv_data: New csv data frame, expected format is the same as the output format from csvManager.c
     :return: no return value
     """
+    if csv_data == "no data":
+        return
+    global FRAME
+    FRAME = FRAME + 1
     with open(FILEPATH, "a", encoding="utf8") as fp:
         lines = csv_data.split("\n")
+        lines.pop(0)
         for line in lines:
             if line == "\x04":
                 break
@@ -107,7 +112,7 @@ def update_data_csv(csv_data):
             kod_obce = line[0]
             pocet_obyvatel = line[1]
             pocet_nakazenych = line[2]
-            datum = line[3]
+            datum = str(int(line[3]) + 1)
             info = CITY_ID_HASH_TABLE[kod_obce]
             nazev_obce = info["nazev_obce"]
             latitude = info["latitude"]
@@ -124,7 +129,10 @@ if platform.uname()[0] == "Windows":
 DEFAULT_Z_COEF = 5  # 8
 DEFAULT_RADIUS_COEF = 19.7 - 1.2 * SCALE_FACTOR  # 18.5 (100%) 18.2 (125%)
 FILEPATH = "../DATA/merged.csv"
+FRAME = 0
 CITY_ID_HASH_TABLE = create_data_hash_table()
+initialize_merged_csv()
+
 
 
 def create_default_figure(filepath=FILEPATH, z_coef=DEFAULT_Z_COEF, radius_coef=DEFAULT_RADIUS_COEF):
@@ -294,7 +302,7 @@ def update_button(update_input, curr_fig):
     sockfd = create_and_connect_socket()
 
     try:
-        sockfd.send("send_data".encode())
+        sockfd.send(("send_data " + str(FRAME)).encode())
     except socket.timeout:
         print("Error: Server timed out.")
         sockfd.close()
@@ -303,9 +311,7 @@ def update_button(update_input, curr_fig):
         sockfd.close()
     csv_data = sockfd.recv(SOCKET_BUFFER_SIZE).decode('ascii').rstrip('\x00\x0a\x0D')
     sockfd.close()
-
     update_data_csv(csv_data)
-    # update_data_csv("568449,100,100,1\n554782,500,2,2")
 
     fig = create_default_figure()
     fig = remain_figure_state(fig, curr_fig)
@@ -360,5 +366,7 @@ def radius_slider(radius_coef, curr_fig):
 
 
 if __name__ == '__main__':
-    initialize_merged_csv()
+    sock = create_and_connect_socket()
+    sock.send("start".encode())
+    sock.close()
     app.run_server(debug=True)
