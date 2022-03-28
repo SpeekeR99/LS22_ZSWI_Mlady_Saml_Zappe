@@ -12,7 +12,7 @@
 
 char SIM_STARTED = 0;
 
-void *out(int connfd, void *arg){
+void *out(int connfd, void *arg) {
     write(connfd, "exit", strlen("exit"));
     exit(0);
 }
@@ -25,15 +25,15 @@ void *out(int connfd, void *arg){
  * @param arg    unused
  * @return void* pointer to the thread id of the constructed thread or NULL if the simulation already running
  */
-void *start_simulation(int connfd, void *arg){
-    if(SIM_STARTED) {
+void *start_simulation(int connfd, void *arg) {
+    if (SIM_STARTED) {
         //write(connfd, "already started\n", strlen("already started\n"));
         return NULL;
     }
 
     pthread_t tid;
 
-    pthread_create(&tid, NULL, start_and_loop,NULL);
+    pthread_create(&tid, NULL, start_and_loop, NULL);
 
     SIM_STARTED = 1;
 
@@ -56,11 +56,11 @@ void *start_simulation(int connfd, void *arg){
  *               <arg1> being the number of frame to send
  * @return NULL
  */
-void *send_data_from_simulation(int connfd, void *arg){
+void *send_data_from_simulation(int connfd, void *arg) {
     char *bff = malloc(SEND_MAX_SIZE * sizeof(char));
 
     int frame = 0;
-    sscanf((const unsigned char *)arg, "%*s %d", &frame);
+    sscanf((const unsigned char *) arg, "%*s %d", &frame);
 
     /* debug
     printf((const char *)arg);
@@ -69,36 +69,35 @@ void *send_data_from_simulation(int connfd, void *arg){
     return;*/
 
     char fname[14] = {0};
-    sprintf(fname,CSV_NAME_FORMAT,frame);
+    sprintf(fname, CSV_NAME_FORMAT, frame);
 
-    printf("sending data from %s\n",fname);
+    printf("sending data from %s\n", fname);
 
     FILE *csv;
-    if( !(csv = fopen((const char *)fname, "r")) )
-    {
+    if (!(csv = fopen((const char *) fname, "r"))) {
         write(connfd, NO_DATA_MESSAGE, strlen(NO_DATA_MESSAGE));
         return NULL;
     }
 
 
     int i = 0, next;
-    
+
     /* go through all characters of the csv, filling the buffer
        if buffer is full, send all its data, free it and continue from begining
      */
-    while((next = fgetc(csv)) != EOF){
-        bff[i] = (char)next;
+    while ((next = fgetc(csv)) != EOF) {
+        bff[i] = (char) next;
 
-        if(i == SEND_MAX_SIZE){
-            write(connfd,bff,SEND_MAX_SIZE);
+        if (i == SEND_MAX_SIZE) {
+            write(connfd, bff, SEND_MAX_SIZE);
             bzero(bff, SEND_MAX_SIZE);
             i = -1; /* next line of code will set this to 0 */
         }
         i++;
     }
     /* write the final part and then the end of transmission */
-    write(connfd,bff,strlen(bff));
-    write(connfd, "\x04",1);
+    write(connfd, bff, strlen(bff));
+    write(connfd, "\x04", 1);
 
     free(bff);
     return NULL;
