@@ -11,6 +11,6 @@
 #define CITY_AREA_COLUMN_NAME "vymera"
 
 country *create_country_from_csv(const char *filepath);
-int create_csv_from_country(country *the_country, char *filepath, int date);
+int create_csv_from_country(country *the_country, const char *filepath, int date);
 
 #endif

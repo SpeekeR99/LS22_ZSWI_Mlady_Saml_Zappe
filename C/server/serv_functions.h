@@ -8,6 +8,7 @@
 #include "../simulation/simulation.h"
 
 #define SEND_MAX_SIZE 4194304
+#define NO_DATA_MESSAGE "no data"
 
 char SIM_STARTED = 0;
 
@@ -22,10 +23,13 @@ void *out(int connfd, void *arg){
  * 
  * @param connfd the connection file descriptor (unused)
  * @param arg    unused
- * @return void* pointer to the thread id of the constructed thread
+ * @return void* pointer to the thread id of the constructed thread or NULL if the simulation already running
  */
 void *start_simulation(int connfd, void *arg){
-    if(SIM_STARTED) return NULL;
+    if(SIM_STARTED) {
+        //write(connfd, "already started\n", strlen("already started\n"));
+        return NULL;
+    }
 
     pthread_t tid;
 
@@ -39,12 +43,13 @@ void *start_simulation(int connfd, void *arg){
 
 /**
  * @brief Sends the CSV data from the simulation. 
- * The CSV is on a path specified by the SIMULATION_CSV_FILE constant defined at the top of this source file
+ * The CSV is on a path specified by the CSV_NAME_FORMAT constant defined in simulation.h
+ * The first argument of this command is taken as the number of frame and sprintf'd into the format.
  * The CSV is sent as 4 MB* chunks of text until the end of the file - so the client might recieve more messages (if the csv is more than 4 MB)
  * After the CSV is completely sent, server will send a string with only a char with the value 4 ('\x04' - ascii character for end of transmission)
  * and then, the command is done
  * 
- * *4 MB = 4194304
+ * *4 MB = 4194304 B
  * 
  * @param connfd connection descriptor
  * @param arg    pointer to the arguments string as if passed in command line - "<command_name> <arg1>",
@@ -55,9 +60,27 @@ void *send_data_from_simulation(int connfd, void *arg){
     char *bff = malloc(SEND_MAX_SIZE * sizeof(char));
 
     int frame = 0;
-    sscanf((const char *)arg, "%*s %d", &frame);
+    sscanf((const unsigned char *)arg, "%*s %d", &frame);
 
-    FILE *csv = fopen(SIMULATION_INI_CSV, "r");
+    /* debug
+    printf((const char *)arg);
+    printf("\n");
+    printf("frame: %i\n", frame);
+    return;*/
+
+    char fname[14] = {0};
+    sprintf(fname,CSV_NAME_FORMAT,frame);
+
+    printf("sending data from %s\n",fname);
+
+    FILE *csv;
+    if( !(csv = fopen((const char *)fname, "r")) )
+    {
+        write(connfd, NO_DATA_MESSAGE, strlen(NO_DATA_MESSAGE));
+        return NULL;
+    }
+
+
     int i = 0, next;
     
     /* go through all characters of the csv, filling the buffer
@@ -74,7 +97,7 @@ void *send_data_from_simulation(int connfd, void *arg){
         i++;
     }
     /* write the final part and then the end of transmission */
-    write(connfd,bff,SEND_MAX_SIZE);
+    write(connfd,bff,strlen(bff));
     write(connfd, "\x04",1);
 
     free(bff);

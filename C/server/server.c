@@ -12,7 +12,6 @@
 #include "serv_functions.h"
 #include "D:\_skola\ZSWI\PRJ\fem-like-spreading-modelling\C\server\serv_functions.h"
 */
-//#include "D:\_skola\ZSWI\PRJ\fem-like-spreading-modelling\C\server\serv_functions.h"
 #include "serv_functions.h"
 
 #define DEF_IP NULL
@@ -132,7 +131,7 @@ void comm_loop(int connfd){
     {
         bzero(bf,MSG_MAX_LEN);
         bzero(cmd, CMD_MAX_LEN);
-        while(!read(connfd,bf,MSG_MAX_LEN)){
+        if(!read(connfd,bf,MSG_MAX_LEN)){
             printf("Connection lost\n");
             return;
         }
@@ -140,7 +139,7 @@ void comm_loop(int connfd){
         /* now: bf contains the recieved line, cmd the first word 
            (should be a name of a command from cmds array) */
 
-        //printf("%s %s", bf, cmd);
+        //printf("recieved (whole, command): %s %s", bf, cmd);
 
         for (size_t i = 0; i < CMDNUM; i++)
             /* find command and call it with the connection file descriptor and the recieved line as its arguments */
