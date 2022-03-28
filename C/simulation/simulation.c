@@ -49,7 +49,10 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom) {
                 theCitizen = (citizen *) arrayListGetPointer(theList, k);
 
                 //something to stop one citizen to move more than once per step (will be somehow changed)
-                if (theCitizen->timeFrame == -1) continue;
+                if (theCitizen->timeFrame == -1) {
+                    theCitizen->timeFrame = 0;
+                    continue;
+                }
                 theCitizen->timeFrame = -1;
 
                 //maybe we could delete this, what can possibly happen :)
@@ -60,6 +63,7 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom) {
 
                 //finds city which is the closest (not really) to the distance which citizen should travel
                 index = interpolationSearch(*doublePointer, theCountry->numberOfCities, theCountry->distances);
+                index = theCountry->distances[index]->id;
 
                 //move the citizen from one city to another
                 hashTableRemoveElement(j, k, theCity->citizens);
@@ -353,15 +357,13 @@ void *start_and_loop(void * args){
     GaussRandom *grand = createRandom(MEAN, STDDEV);
 
     /* filename: frameXXXX.csv = 13+1 chars = 14 (+1 = null term.) */
-    char filename[14] = {0};
+    char filename[40] = {0};
     clock_t start, end;
 
     for(int date = 0 ;; date++) { 
         start = clock();
         sprintf(filename, CSV_NAME_FORMAT, date);
         simulationStep(ctry, grand);
-        char filepath[100] = "../DATA/";
-        strcat(filepath, filename);
         create_csv_from_country(ctry, filename, date);
         end = clock();
 
