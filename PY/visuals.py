@@ -72,6 +72,23 @@ def create_data_hash_table(filepath="../DATA/initial.csv"):
     return hash_table
 
 
+def initialize_merged_csv(source="../DATA/initial.csv", filepath="../DATA/merged.csv"):
+    """
+    Creates and initializes merged.csv with frame value 0
+    Uses initial.csv to initialize the default first state of the simulation
+    :param source: Filepath to initial.csv
+    :param filepath: Filepath to merged.csv
+    :return: no return value
+    """
+    with open(filepath, "w", encoding="utf8") as fp:
+        with open(source, "r", encoding="utf8") as ini:
+            line = ini.readline().split(",")
+            while line and len(line) > 3:
+                fp.write(line[0] + "," + line[1] + "," + line[2] + "," + line[3] + "," + line[5] + "," + line[6] + "," +
+                         line[7])
+                line = ini.readline().split(",")
+
+
 def update_data_csv(csv_data):
     """
     Appends new CSV files (frames) to the merged.csv main data file
@@ -84,6 +101,8 @@ def update_data_csv(csv_data):
     with open(FILEPATH, "a", encoding="utf8") as fp:
         lines = csv_data.split("\n")
         for line in lines:
+            if line == "\x04":
+                break
             line = line.split(",")
             kod_obce = line[0]
             pocet_obyvatel = line[1]
@@ -341,4 +360,5 @@ def radius_slider(radius_coef, curr_fig):
 
 
 if __name__ == '__main__':
+    initialize_merged_csv()
     app.run_server(debug=True)
