@@ -139,7 +139,7 @@ void comm_loop(int connfd){
         /* now: bf contains the recieved line, cmd the first word 
            (should be a name of a command from cmds array) */
 
-        //printf("%s %s", bf, cmd);
+        //printf("recieved (whole, command): %s %s", bf, cmd);
 
         for (size_t i = 0; i < CMDNUM; i++)
             /* find command and call it with the connection file descriptor and the recieved line as its arguments */

@@ -89,7 +89,7 @@ void *send_data_from_simulation(int connfd, void *arg){
         i++;
     }
     /* write the final part and then the end of transmission */
-    write(connfd,bff,SEND_MAX_SIZE);
+    write(connfd,bff,strlen(bff));
     write(connfd, "\x04",1);
 
     free(bff);

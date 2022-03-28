@@ -129,7 +129,7 @@ country *create_country_from_csv(const char *filepath) {
  * @param date Date is basically the animation frame
  * @return 1 if everything went fine, 0 otherwise
  */
-int create_csv_from_country(country *the_country, char *filepath, int date) {
+int create_csv_from_country(country *the_country, const char *filepath, int date) {
     // Ini
     FILE *fp = NULL;
     city *curr_city = NULL;
