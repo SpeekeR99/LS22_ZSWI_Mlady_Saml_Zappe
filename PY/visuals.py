@@ -51,6 +51,52 @@ def create_and_connect_socket():
 #    sockfd.close()
 
 
+# ------------- DATA PART -----------------------
+
+
+def create_data_hash_table(filepath="../DATA/initial.csv"):
+    """
+    Creates hash table where key is city id
+    Under city id 3 more keys can be found - nazev_obce, latitude and longitude
+    These contain the static values of cities that won't ever change
+    :param filepath: Filepath to initial.csv
+    :return: Hash table of static values of cities
+    """
+    hash_table = {}
+    with open(filepath, "r", encoding="utf8") as fp:
+        keys = fp.readline().split(",")
+        line = fp.readline().split(",")
+        while line and len(line) > 3:
+            hash_table[line[1]] = {keys[0]: line[0], keys[2]: line[2], keys[3]: line[3]}
+            line = fp.readline().split(",")
+    return hash_table
+
+
+def update_data_csv(csv_data):
+    """
+    Appends new CSV files (frames) to the merged.csv main data file
+    Expected format is the same, as the output format from csvManager.c
+    So all that is needed from server is to copy the created framexxxx.csv file
+    and send all the lines as Strings to client, it will handle it well
+    :param csv_data: New csv data frame, expected format is the same as the output format from csvManager.c
+    :return: no return value
+    """
+    with open(FILEPATH, "a", encoding="utf8") as fp:
+        lines = csv_data.split("\n")
+        for line in lines:
+            line = line.split(",")
+            kod_obce = line[0]
+            pocet_obyvatel = line[1]
+            pocet_nakazenych = line[2]
+            datum = line[3]
+            info = CITY_ID_HASH_TABLE[kod_obce]
+            nazev_obce = info["nazev_obce"]
+            latitude = info["latitude"]
+            longitude = info["longitude"]
+            fp.write("\n" + nazev_obce + "," + kod_obce + "," + latitude + "," + longitude + "," + pocet_obyvatel + ","
+                     + pocet_nakazenych + "," + datum)
+
+
 # ------------- VISUALS PART --------------------
 
 SCALE_FACTOR = 1.25
@@ -59,6 +105,7 @@ if platform.uname()[0] == "Windows":
 DEFAULT_Z_COEF = 5  # 8
 DEFAULT_RADIUS_COEF = 19.7 - 1.2 * SCALE_FACTOR  # 18.5 (100%) 18.2 (125%)
 FILEPATH = "../DATA/merged.csv"
+CITY_ID_HASH_TABLE = create_data_hash_table()
 
 
 def create_default_figure(filepath=FILEPATH, z_coef=DEFAULT_Z_COEF, radius_coef=DEFAULT_RADIUS_COEF):
@@ -195,7 +242,8 @@ def remain_figure_state(new_fig, old_fig, z_slider_trigger=False, radius_slider_
     :return: Figure that has new dataframe, but old characteristics (such as zoom and animation frame...)
     """
     if old_fig is not None:
-        new_fig["layout"]["sliders"][0]["active"] = old_fig["layout"]["sliders"][0]["active"]
+        if "sliders" in old_fig["layout"].keys():
+            new_fig["layout"]["sliders"][0]["active"] = old_fig["layout"]["sliders"][0]["active"]
         new_fig["data"][0].coloraxis = old_fig["data"][0]["coloraxis"]
         new_fig["data"][0].customdata = old_fig["data"][0]["customdata"]
         new_fig["data"][0].hovertemplate = old_fig["data"][0]["hovertemplate"]
@@ -237,8 +285,8 @@ def update_button(update_input, curr_fig):
     csv_data = sockfd.recv(SOCKET_BUFFER_SIZE).decode('ascii').rstrip('\x00\x0a\x0D')
     sockfd.close()
 
-    with open(FILEPATH, "a") as f:
-        f.write("\n" + csv_data)
+    update_data_csv(csv_data)
+    # update_data_csv("568449,100,100,1\n554782,500,2,2")
 
     fig = create_default_figure()
     fig = remain_figure_state(fig, curr_fig)

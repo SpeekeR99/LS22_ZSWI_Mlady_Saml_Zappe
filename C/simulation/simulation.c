@@ -1,10 +1,10 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <math.h>
 #include <float.h>
 #include <time.h>
 #include "simulation.h"
-#include "random.h"
 #include "csvManager.h"
 
 #ifndef M_PI
@@ -144,13 +144,15 @@ country *createCountry(int numberOfCities) {
 /**
  * Creates new city specified by parameters
  * @param city_id unique identifier, must be non-negative
+ * @param area area of the city in km squared
  * @param population must be greater than zero
+ * @param infected number of infected people
  * @param lat in degrees, must be in interval <0, 90>
  * @param lon in degrees, must be in interval <0, 180>
  * @return pointer to city struct or NULL if parameters are invalid or it is
  *         not possible to allocate memory
  */
-city *createCity(int city_id, int population, double lat, double lon) {
+city *createCity(int city_id, double area, int population, int infected, double lat, double lon) {
     city *theCity;
     if (population <= 0) return NULL;
     theCity = calloc(1, sizeof(city));
@@ -163,7 +165,9 @@ city *createCity(int city_id, int population, double lat, double lon) {
     }
 
     theCity->city_id = city_id;
+    theCity->area = area;
     theCity->population = population;
+    theCity->infected = infected;
     theCity->lat = lat;
     theCity->lon = lon;
 
@@ -356,6 +360,8 @@ void *start_and_loop(void * args){
         start = clock();
         sprintf(filename, CSV_NAME_FORMAT, date);
         simulationStep(ctry, grand);
+        char filepath[100] = "../DATA/";
+        strcat(filepath, filename);
         create_csv_from_country(ctry, filename, date);
         end = clock();
 
