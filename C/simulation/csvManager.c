@@ -44,7 +44,7 @@ int process_csv(country **the_country, const char *filepath) {
     FILE *fp = NULL;
     double lon, lat, area;
     int i = 0, citizen_index = 0, population_index = -1, lat_index = -1, lon_index = -1, city_id_index = -1,
-        infected_index = -1, area_index = -1, population, city_id, infected;
+            infected_index = -1, area_index = -1, population, city_id, infected;
     short city_index = 0;
     char buffer[255];
     char *token;
@@ -70,7 +70,8 @@ int process_csv(country **the_country, const char *filepath) {
         i++;
     }
     if (population_index == -1 || lat_index == -1 || lon_index == -1 || city_id_index == -1 ||
-        area_index == -1 || infected_index == -1) return 0;
+        area_index == -1 || infected_index == -1)
+        return 0;
 
     // Reading the rest and creating structs
     while (!feof(fp)) {

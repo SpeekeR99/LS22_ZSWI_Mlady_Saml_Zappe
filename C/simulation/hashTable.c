@@ -52,9 +52,10 @@ int hashTableAddElement(void *element, int id, hashTable *table) {
  */
 void *hashTableRemoveElement(int arrayIndex, int elementIndex, hashTable *table) {
     if (!table || arrayIndex < 0 || elementIndex < 0 ||
-    arrayIndex > table->size || table->array[arrayIndex]->filledItems < elementIndex) return NULL;
+        arrayIndex > table->size || table->array[arrayIndex]->filledItems < elementIndex)
+        return NULL;
 
-    void *pointer = arrayListRemoveElement(table->array[arrayIndex],elementIndex);
+    void *pointer = arrayListRemoveElement(table->array[arrayIndex], elementIndex);
     if (!pointer) return NULL;
 
     table->filledItems--;

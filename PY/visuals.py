@@ -134,7 +134,6 @@ CITY_ID_HASH_TABLE = create_data_hash_table()
 initialize_merged_csv()
 
 
-
 def create_default_figure(filepath=FILEPATH, z_coef=DEFAULT_Z_COEF, radius_coef=DEFAULT_RADIUS_COEF):
     """
     Creates default figure containing the map from csv data file
