@@ -8,6 +8,7 @@
 #include "../simulation/simulation.h"
 
 #define SEND_MAX_SIZE 4194304
+#define NO_DATA_MESSAGE "no data"
 
 char SIM_STARTED = 0;
 
@@ -26,7 +27,7 @@ void *out(int connfd, void *arg){
  */
 void *start_simulation(int connfd, void *arg){
     if(SIM_STARTED) {
-        write(connfd, "already started\n", strlen("already started\n"));
+        //write(connfd, "already started\n", strlen("already started\n"));
         return NULL;
     }
 
@@ -72,7 +73,14 @@ void *send_data_from_simulation(int connfd, void *arg){
 
     printf("sending data from %s\n",fname);
 
-    FILE *csv = fopen((const char *)fname, "r");
+    FILE *csv;
+    if( !(csv = fopen((const char *)fname, "r")) )
+    {
+        write(connfd, NO_DATA_MESSAGE, strlen(NO_DATA_MESSAGE));
+        return NULL;
+    }
+
+
     int i = 0, next;
     
     /* go through all characters of the csv, filling the buffer
