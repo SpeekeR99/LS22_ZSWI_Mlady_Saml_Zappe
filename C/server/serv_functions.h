@@ -95,9 +95,15 @@ void *send_data_from_simulation(int connfd, void *arg) {
         }
         i++;
     }
+    fclose(csv);
     /* write the final part and then the end of transmission */
     write(connfd, bff, strlen(bff));
     write(connfd, "\x04", 1);
+
+
+    //FILE *dbg = fopen("c_dbg.log","w");
+    //fprintf(dbg,"%s",bff);
+    //fclose(dbg);
 
     free(bff);
     return NULL;

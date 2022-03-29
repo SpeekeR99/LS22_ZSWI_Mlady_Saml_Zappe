@@ -108,6 +108,9 @@ def update_data_csv(csv_data):
         lines = csv_data.split("\n")
         lines.pop(0)
         for line in lines:
+            #with open("dbg.log","a") as dbg:
+            #    dbg.write(line)
+            #    dbg.write("\n")
             if line == "\x04":
                 break
             line = line.split(",")
@@ -312,10 +315,22 @@ def update_button(update_input, curr_fig):
         print("Error: could not write to server.")
         sockfd.shutdown(socket.SHUT_WR)
         sockfd.close()
-    csv_data = sockfd.recv(SOCKET_BUFFER_SIZE).decode('ascii').rstrip('\x00\x0a\x0D')
+
+    csv_data = bytes()
+
+    while not csv_data.endswith(b'\x04'):
+        csv_data = csv_data + sockfd.recv(SOCKET_BUFFER_SIZE)
+
+    csv_str = csv_data.decode("ascii")
+    print("data recieved\n")
+    #with open("dbg.log","w") as dbg:
+    #    dbg.write(csv_str)
+    #    dbg.write("recv end\n")
+    
     sockfd.shutdown(socket.SHUT_WR)
     sockfd.close()
-    update_data_csv(csv_data)
+    print("Client disconnected\n")
+    update_data_csv(csv_str)
 
     fig = create_default_figure()
     fig = remain_figure_state(fig, curr_fig)
@@ -374,4 +389,5 @@ if __name__ == '__main__':
     sock.send("start".encode())
     sock.shutdown(socket.SHUT_WR)
     sock.close()
+    print("Client disconnected\n")
     app.run_server(debug=True)
