@@ -49,7 +49,7 @@ arrayList *createArrayList(int listSize, int itemSize) {
 int arrayListAdd(arrayList *list, void *pointer) {
     if (!list || !pointer) return FAILURE;
 
-    if (list->listSize == list->filledItems) arrayListExpand(list, INCREMENT);
+    if (list->listSize == list->filledItems) arrayListExpand(list);
 
     list->data[list->filledItems] = pointer;
     list->filledItems++;
@@ -60,23 +60,22 @@ int arrayListAdd(arrayList *list, void *pointer) {
  * Increases size of arrayList by increment parameter. Then nulls content of the part
  * which was added.
  * @param list non null pointer to arrayList
- * @param increment must be greater than zero
  * @return SUCCESS (1) or FAILURE (0), failure can occur when list is NULL or it
  *         is not possible to allocate more memory
  */
-int arrayListExpand(arrayList *list, const int increment) {
+int arrayListExpand(arrayList *list) {
     void **temp;
     if (!list) return FAILURE;
 
-    temp = realloc(list->data, (list->listSize + increment) * sizeof(void *));
+    temp = realloc(list->data, (list->listSize * 2) * sizeof(void *));
     if (!temp) {
         perror("Out of memory error\n");
         return FAILURE;
     }
 
     list->data = temp;
-    memset(&list->data[list->listSize], 0, increment * sizeof(void *));
-    list->listSize += increment;
+    memset(&list->data[list->listSize], 0, list->listSize * sizeof(void *));
+    list->listSize *= 2;
     return SUCCESS;
 }
 

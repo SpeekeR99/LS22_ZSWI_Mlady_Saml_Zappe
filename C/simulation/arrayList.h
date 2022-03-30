@@ -1,6 +1,5 @@
 #ifndef SEMESTRALKA_ARRAYLIST_H
 #define SEMESTRALKA_ARRAYLIST_H
-#define INCREMENT 10
 #define FAILURE 0
 #define SUCCESS 1
 
@@ -15,7 +14,7 @@ typedef struct {
 
 arrayList *createArrayList(int listSize, int itemSize);
 int arrayListAdd(arrayList *list, void *pointer);
-int arrayListExpand(arrayList *list, int increment);
+int arrayListExpand(arrayList *list);
 void *arrayListGetPointer(arrayList *list, int index);
 void *arrayListRemoveElement(arrayList *list, int index);
 void freeArrayList(arrayList **list);
