@@ -1,8 +1,10 @@
 #include <stdlib.h>
 #include <math.h>
 #include <float.h>
+#include <stdio.h>
 #include "simulation.h"
 #include "random.h"
+#include "csvManager.h"
 
 #ifndef M_PI
 #    define M_PI 3.14159265358979323846
@@ -46,7 +48,10 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom) {
                 theCitizen = (citizen *) arrayListGetPointer(theList, k);
 
                 //something to stop one citizen to move more than once per step (will be somehow changed)
-                if (theCitizen->timeFrame == -1) continue;
+                if (theCitizen->timeFrame == -1) {
+                    theCitizen->timeFrame = 0;
+                    continue;
+                }
                 theCitizen->timeFrame = -1;
 
                 //maybe we could delete this, what can possibly happen :)
@@ -57,6 +62,8 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom) {
 
                 //finds city which is the closest (not really) to the distance which citizen should travel
                 index = interpolationSearch(*doublePointer, theCountry->numberOfCities, theCountry->distances);
+                //todo
+                index = theCountry->distances[index]->id;
 
                 //move the citizen from one city to another
                 hashTableRemoveElement(j, k, theCity->citizens);
@@ -153,7 +160,7 @@ city *createCity(int city_id, int population, double lat, double lon) {
     theCity = calloc(1, sizeof(city));
     if (!theCity) return NULL;
 
-    theCity->citizens = createHashTable(population / 10, sizeof(citizen *));
+    theCity->citizens = createHashTable(population / 500, sizeof(citizen *));
     if (!theCity->citizens) {
         free(theCity);
         return NULL;
@@ -330,7 +337,7 @@ int cmpCitiesByDistance(const void *a, const void *b) {
 /**
  * @brief Initializes mandatory structs and starts the simulation, looping indefinetely
  *        This function is possible to be passed as an argument to pthread_create()
- * 
+ *
  * @param args the arguments passed as an array (not used)
  * @return void* the output returned as an array (always NULL)
  */
@@ -339,9 +346,9 @@ void *start_and_loop(void * args){
     GaussRandom *grand = createRandom(MEAN, STDDEV);
 
     /* filename: frameXXXX.csv = 13+1 chars = 14 (+1 = null term.) */
-    char *filename[14] = {0};
+    char filename[14] = {0};
 
-    for(int date = 0 ;; date++) { 
+    for(int date = 0 ;; date++) {
         sprintf(filename, CSV_NAME_FORMAT, date);
         simulationStep(ctry, grand);
         create_csv_from_country(ctry, filename, date);
