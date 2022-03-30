@@ -3,6 +3,12 @@
 *.exe
 *.stackdump
 
+# frames
+frame*.csv
+
+#dbg logs
+*.log
+
 # User-specific stuff
 .idea/**/workspace.xml
 .idea/**/tasks.xml

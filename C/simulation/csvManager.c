@@ -42,8 +42,9 @@ int number_of_cities_from_csv(const char *filepath) {
 int process_csv(country **the_country, const char *filepath) {
     // Ini
     FILE *fp = NULL;
-    double lon, lat;
-    int i = 0, citizen_index = 0, population_index = -1, lat_index = -1, lon_index = -1, city_id_index = -1, population, city_id;
+    double lon, lat, area;
+    int i = 0, citizen_index = 0, population_index = -1, lat_index = -1, lon_index = -1, city_id_index = -1,
+            infected_index = -1, area_index = -1, population, city_id, infected;
     short city_index = 0;
     char buffer[255];
     char *token;
@@ -63,10 +64,14 @@ int process_csv(country **the_country, const char *filepath) {
         if (!strcmp(token, LATITUDE_COLUMN_NAME)) lat_index = i;
         if (!strcmp(token, LONGITUDE_COLUMN_NAME)) lon_index = i;
         if (!strcmp(token, CITY_ID_COLUMN_NAME)) city_id_index = i;
+        if (!strcmp(token, CITY_AREA_COLUMN_NAME)) area_index = i;
+        if (!strcmp(token, INFECTED_COLUMN_NAME)) infected_index = i;
         token = strtok(NULL, ",");
         i++;
     }
-    if (population_index == -1 || lat_index == -1 || lon_index == -1 || city_id_index == -1) return 0;
+    if (population_index == -1 || lat_index == -1 || lon_index == -1 || city_id_index == -1 ||
+        area_index == -1 || infected_index == -1)
+        return 0;
 
     // Reading the rest and creating structs
     while (!feof(fp)) {
@@ -79,10 +84,12 @@ int process_csv(country **the_country, const char *filepath) {
             if (i == lat_index) lat = atof(token);
             if (i == lon_index) lon = atof(token);
             if (i == city_id_index) city_id = atoi(token);
+            if (i == area_index) area = atof(token);
+            if (i == infected_index) infected = atoi(token);
             token = strtok(NULL, ",");
             i++;
         }
-        (*the_country)->cities[city_index] = createCity(city_id, population, lat, lon);
+        (*the_country)->cities[city_index] = createCity(city_id, area, population, infected, lat, lon);
         theCity = (*the_country)->cities[city_index];
 
         for (i = 0; i < theCity->population; i++) {
@@ -135,12 +142,13 @@ int create_csv_from_country(country *the_country, const char *filepath, int date
     // Create file
     fp = fopen(filepath, "w");
     if (!fp) return 0;
-    fprintf(fp, "kod_obce,pocet_obyvatel,datum\n");
+    fprintf(fp, "kod_obce,pocet_obyvatel,pocet_nakazenych,datum\n");
 
     for (i = 0; i < the_country->numberOfCities; i++) {
         curr_city = the_country->cities[i];
         fprintf(fp, "%d,", curr_city->city_id);
         fprintf(fp, "%d,", curr_city->population);
+        fprintf(fp, "%d,", curr_city->infected);
         fprintf(fp, "%d\n", date);
     }
 
