@@ -21,6 +21,7 @@ typedef struct {
     double lon;
     int city_id;
     int population;
+    int infected;
     hashTable *citizens;
 }city;
 
@@ -49,7 +50,7 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom);
 
 
 country *createCountry(int numberOfCities);
-city *createCity(int city_id, int population, double lat, double lon);
+city *createCity(int city_id, int population, int infected, double lat, double lon);
 citizen *createCitizen(int id);
 void freeCountry(country **theCountry);
 void freeCity(city **theCity);

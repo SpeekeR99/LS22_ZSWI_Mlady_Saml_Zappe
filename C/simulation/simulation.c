@@ -154,7 +154,7 @@ country *createCountry(int numberOfCities) {
  * @return pointer to city struct or NULL if parameters are invalid or it is
  *         not possible to allocate memory
  */
-city *createCity(int city_id, int population, double lat, double lon) {
+city *createCity(int city_id, int population, int infected, double lat, double lon) {
     city *theCity;
     if (population <= 0) return NULL;
     theCity = calloc(1, sizeof(city));
@@ -168,6 +168,7 @@ city *createCity(int city_id, int population, double lat, double lon) {
 
     theCity->city_id = city_id;
     theCity->population = population;
+    theCity->infected = infected;
     theCity->lat = lat;
     theCity->lon = lon;
 
