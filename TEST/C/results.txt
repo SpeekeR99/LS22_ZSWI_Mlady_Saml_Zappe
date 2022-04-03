@@ -1,0 +1,20 @@
+testArrayList.c:123:test_createArrayList_should_not_be_null:PASS
+testArrayList.c:124:test_createArrayList_should_be_null_1:PASS
+testArrayList.c:125:test_createArrayList_should_be_null_2:PASS
+testArrayList.c:126:test_arrayListAdd_should_add:PASS
+testArrayList.c:127:test_arrayListAdd_should_not_add_1:PASS
+testArrayList.c:128:test_arrayListAdd_should_not_add_2:PASS
+testArrayList.c:129:test_arrayListExpand_should_expand:PASS
+testArrayList.c:130:test_arrayListGetPointer_should_get_pointer:PASS
+testArrayList.c:131:test_arrayListGetPointer_should_not_get_pointer_1:PASS
+testArrayList.c:132:test_arrayListGetPointer_should_not_get_pointer_2:PASS
+testArrayList.c:133:test_arrayListGetPointer_should_not_get_pointer_3:PASS
+testArrayList.c:134:test_arrayListRemoveElement_should_remove:PASS
+testArrayList.c:135:test_arrayListRemoveElement_should_not_remove_1:PASS
+testArrayList.c:136:test_arrayListRemoveElement_should_not_remove_2:PASS
+testArrayList.c:137:test_arrayListRemoveElement_should_not_remove_3:PASS
+testArrayList.c:138:test_freeArrayList:PASS
+
+-----------------------
+16 Tests 0 Failures 0 Ignored 
+OK
