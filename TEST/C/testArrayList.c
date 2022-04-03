@@ -5,20 +5,19 @@ void setUp (void) {}
 
 void test_createArrayList_should_not_be_null(void) {
     arrayList *al = createArrayList(1, 1);
-    if (al) TEST_ASSERT_EQUAL(0, 0);
-    else TEST_ASSERT_EQUAL(0, 1);
+    TEST_ASSERT_NOT_NULL(al);
     freeArrayList(&al);
 }
 
 void test_createArrayList_should_be_null_1(void) {
     arrayList *al = createArrayList(-1, 1);
-    TEST_ASSERT_EQUAL(NULL, al);
+    TEST_ASSERT_NULL(al);
     freeArrayList(&al);
 }
 
 void test_createArrayList_should_be_null_2(void) {
     arrayList *al = createArrayList(1, -1);
-    TEST_ASSERT_EQUAL(NULL, al);
+    TEST_ASSERT_NULL(al);
     freeArrayList(&al);
 }
 
@@ -63,7 +62,7 @@ void test_arrayListGetPointer_should_not_get_pointer_1(void) {
     arrayList *al = createArrayList(10, sizeof(int));
     arrayListAdd(al, (void *)5);
     int *pointer = (int *) arrayListGetPointer(al, 1);
-    TEST_ASSERT_EQUAL(pointer, NULL);
+    TEST_ASSERT_NULL(pointer);
     freeArrayList(&al);
 }
 
@@ -71,13 +70,13 @@ void test_arrayListGetPointer_should_not_get_pointer_2(void) {
     arrayList *al = createArrayList(10, sizeof(int));
     arrayListAdd(al, (void *)5);
     int *pointer = (int *) arrayListGetPointer(al, -1);
-    TEST_ASSERT_EQUAL(pointer, NULL);
+    TEST_ASSERT_NULL(pointer);
     freeArrayList(&al);
 }
 
 void test_arrayListGetPointer_should_not_get_pointer_3(void) {
     int *pointer = (int *) arrayListGetPointer(NULL, 0);
-    TEST_ASSERT_EQUAL(pointer, NULL);
+    TEST_ASSERT_NULL(pointer);
 }
 
 void test_arrayListRemoveElement_should_remove(void) {
@@ -93,27 +92,27 @@ void test_arrayListRemoveElement_should_remove(void) {
 
 void test_arrayListRemoveElement_should_not_remove_1(void) {
     arrayList *al = createArrayList(10, sizeof(int));
-    int pointer = (int) arrayListRemoveElement(al, 0);
-    TEST_ASSERT_EQUAL(pointer, NULL);
+    int *pointer = (int *) arrayListRemoveElement(al, 0);
+    TEST_ASSERT_NULL(pointer);
     freeArrayList(&al);
 }
 
 void test_arrayListRemoveElement_should_not_remove_2(void) {
     arrayList *al = createArrayList(10, sizeof(int));
-    int pointer = (int) arrayListRemoveElement(al, -5);
-    TEST_ASSERT_EQUAL(pointer, NULL);
+    int *pointer = (int *) arrayListRemoveElement(al, -5);
+    TEST_ASSERT_NULL(pointer);
     freeArrayList(&al);
 }
 
 void test_arrayListRemoveElement_should_not_remove_3(void) {
-    int pointer = (int) arrayListRemoveElement(NULL, 0);
-    TEST_ASSERT_EQUAL(pointer, NULL);
+    int *pointer = (int *) arrayListRemoveElement(NULL, 0);
+    TEST_ASSERT_NULL(pointer);
 }
 
 void test_freeArrayList(void) {
     arrayList *al = createArrayList(10, sizeof(int));
     freeArrayList(&al);
-    TEST_ASSERT_EQUAL(al, NULL);
+    TEST_ASSERT_NULL(al);
 }
 
 
