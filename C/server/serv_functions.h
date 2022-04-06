@@ -8,12 +8,12 @@
 #include "../simulation/simulation.h"
 
 #define SEND_MAX_SIZE 4194304
-#define NO_DATA_MESSAGE "no data"
+#define NO_DATA_MESSAGE "no data\x04"
 
 char SIM_STARTED = 0;
 
 void *out(int connfd, void *arg) {
-    write(connfd, "exit", strlen("exit"));
+    write(connfd, "exit\x04", strlen("exit\x04"));
     exit(0);
 }
 
