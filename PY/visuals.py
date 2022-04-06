@@ -14,6 +14,7 @@ import sys
 port = 4242 if len(sys.argv) != 3 else int(sys.argv[2])
 host_ip = "127.0.0.1" if len(sys.argv) != 3 else sys.argv[1]
 SOCKET_BUFFER_SIZE = 4194304
+SOCKET_EXIT_CODE = b"I'LL BE BACK"
 
 
 def create_and_connect_socket():
@@ -39,6 +40,16 @@ def create_and_connect_socket():
         return None
     return sockfd
 
+def close_socket(sockfd):
+    """
+    Closes socket
+    :param sockfd: Socket to close
+    :return: no return value
+    """
+    sockfd.send(SOCKET_EXIT_CODE)
+    #sockfd.shutdown(socket.SHUT_WR)
+    sockfd.close()
+    print("Client disconnected\n")
 
 # client ready to send commands to the server
 # usage: a callback in the visualisation app (through a button perhaps)
@@ -47,10 +58,10 @@ def create_and_connect_socket():
 #    sockfd.send(command_in_string.encode())
 # except socket.timeout as err:
 #        print("Error: Server timed out.")
-#        sockfd.close()
+#        close_socket(sockfd)
 # except socket.error:
 #    print("Error: could not write to server.")
-#    sockfd.close()
+#    close_socket(sockfd)
 
 
 # ------------- DATA PART -----------------------
@@ -100,7 +111,8 @@ def update_data_csv(csv_data):
     :param csv_data: New csv data frame, expected format is the same as the output format from csvManager.c
     :return: no return value
     """
-    if csv_data == "no data":
+    
+    if csv_data.startswith("no data"):
         return
     global FRAME
     FRAME = FRAME + 1
@@ -309,12 +321,10 @@ def update_button(update_input, curr_fig):
         sockfd.send(("send_data " + str(FRAME)).encode())
     except socket.timeout:
         print("Error: Server timed out.")
-        sockfd.shutdown(socket.SHUT_WR)
-        sockfd.close()
+        close_socket(sockfd)
     except socket.error:
         print("Error: could not write to server.")
-        sockfd.shutdown(socket.SHUT_WR)
-        sockfd.close()
+        close_socket(sockfd)
 
     csv_data = bytes()
 
@@ -327,9 +337,7 @@ def update_button(update_input, curr_fig):
     #    dbg.write(csv_str)
     #    dbg.write("recv end\n")
     
-    sockfd.shutdown(socket.SHUT_WR)
-    sockfd.close()
-    print("Client disconnected\n")
+    close_socket(sockfd)
     update_data_csv(csv_str)
 
     fig = create_default_figure()
@@ -387,7 +395,6 @@ def radius_slider(radius_coef, curr_fig):
 if __name__ == '__main__':
     sock = create_and_connect_socket()
     sock.send("start".encode())
-    sock.shutdown(socket.SHUT_WR)
-    sock.close()
-    print("Client disconnected\n")
+    close_socket(sock)
+
     app.run_server(debug=True)
