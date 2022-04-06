@@ -4,8 +4,8 @@
 #include "hashTable.h"
 #include "random.h"
 
-#define SIMULATION_INI_CSV "DATA/initial.csv"
-#define CSV_NAME_FORMAT "DATA/frames/frame%04i.csv"
+#define SIMULATION_INI_CSV "../../DATA/merged.csv"
+#define CSV_NAME_FORMAT "frame%04d.csv"
 #define MEAN    20.0
 #define STDDEV  20.0
 
@@ -19,10 +19,10 @@ typedef struct {
 typedef struct {
     double lat;
     double lon;
-    double area;
     int city_id;
     int population;
     int infected;
+    int area;
     hashTable *citizens;
 }city;
 
@@ -51,7 +51,7 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom);
 
 
 country *createCountry(int numberOfCities);
-city *createCity(int city_id, double area, int population, int infected, double lat, double lon);
+city *createCity(int city_id, int area, int population, int infected, double lat, double lon);
 citizen *createCitizen(int id);
 void freeCountry(country **theCountry);
 void freeCity(city **theCity);

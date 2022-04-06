@@ -5,7 +5,9 @@
  */
 #include <malloc.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "hashTable.h"
+#include "simulation.h"
 
 /**
  * Creates new hashTable with @param size for items with @param itemSize.
@@ -18,11 +20,12 @@
 hashTable *createHashTable(int size, int itemSize) {
     int i;
     hashTable *table = malloc(sizeof(hashTable));
-    table->size = size;
+    table->size = size > 0 ? size : 40;
     table->filledItems = 0;
-    table->array = malloc(sizeof(arrayList *) * size);
+    table->itemSize = itemSize;
+    table->array = malloc(sizeof(arrayList *) * table->size);
     for (i = 0; i < table->size; i++) {
-        table->array[i] = createArrayList(5, itemSize);
+        table->array[i] = createArrayList(500, table->itemSize);
     }
 
     return table;
@@ -38,6 +41,10 @@ hashTable *createHashTable(int size, int itemSize) {
 int hashTableAddElement(void *element, int id, hashTable *table) {
     if (!element || !table) return 0;
     int updatedIndex = ABS(id % table->size);
+
+    //todo change size
+    if (table->array[updatedIndex]->filledItems > 1000) expandArray(table);
+    updatedIndex = ABS(id % table->size);
     arrayListAdd(table->array[updatedIndex], element);
     table->filledItems++;
     return 1;
@@ -60,6 +67,43 @@ void *hashTableRemoveElement(int arrayIndex, int elementIndex, hashTable *table)
 
     table->filledItems--;
     return pointer;
+}
+
+int expandArray(hashTable *table) {
+    arrayList **newArrayLists;
+    int i;
+    int j;
+    int newSize;
+    void *pointer;
+    int updatedIndex;
+
+    if (!table) return EXIT_FAILURE;
+
+    newSize = table->size * 4;
+    newArrayLists = malloc(sizeof(arrayList *) * newSize);
+    if (!newArrayLists) return EXIT_FAILURE;
+
+    for (i = 0; i < newSize; i++) {
+        newArrayLists[i] = createArrayList(300, table->itemSize);
+    }
+
+    for (i = 0; i < table->size; i++) {
+        for (j = 0; j < table->array[i]->filledItems; j++) {
+            if ((pointer = arrayListGetPointer(table->array[i], j))) {
+                updatedIndex = ((citizen *) pointer)->id % newSize;
+                arrayListAdd(newArrayLists[updatedIndex], pointer);
+            }
+        }
+    }
+
+    for (i = 0; i < table->size; i++) {
+        free(table->array[i]);
+    }
+
+
+    table->array = newArrayLists;
+    table->size = newSize;
+    return EXIT_SUCCESS;
 }
 
 /**

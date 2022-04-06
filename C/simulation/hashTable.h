@@ -14,6 +14,7 @@ typedef struct {
 hashTable *createHashTable(int size, int itemSize);
 int hashTableAddElement(void *element, int id, hashTable *table);
 void *hashTableRemoveElement(int arrayIndex, int elementIndex, hashTable *table);
+int expandArray(hashTable *table);
 void freeHashTable(hashTable **table);
 
 #endif
