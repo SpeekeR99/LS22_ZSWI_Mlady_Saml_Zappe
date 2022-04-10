@@ -57,3 +57,23 @@ testCsvManager.c:47:test_create_csv_from_country_should_not_create:PASS
 -----------------------
 5 Tests 0 Failures 0 Ignored 
 OK
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+--------------------------------------------------------------------- 
+-                          TEST RANDOM                              - 
+--------------------------------------------------------------------- 
+testRandom.c:94:test_createRandom:PASS
+testRandom.c:95:test_randomDouble:PASS
+testRandom.c:96:test_randomGaussian_should_work:PASS
+testRandom.c:97:test_randomGaussian_should_not_work_1:PASS
+testRandom.c:98:test_randomGaussian_should_not_work_2:PASS
+testRandom.c:99:test_nextNormalDistDouble_should_work:PASS
+testRandom.c:100:test_nextNormalDistDouble_should_not_work_1:PASS
+testRandom.c:101:test_nextNormalDistDouble_should_not_work_2:PASS
+testRandom.c:102:test_nextNormalDistDoubleFaster_should_work:PASS
+testRandom.c:103:test_nextNormalDistDoubleFaster_should_not_work_1:PASS
+testRandom.c:104:test_nextNormalDistDoubleFaster_should_not_work_2:PASS
+testRandom.c:105:test_freeRandom:PASS
+
+-----------------------
+12 Tests 0 Failures 0 Ignored 
+OK
