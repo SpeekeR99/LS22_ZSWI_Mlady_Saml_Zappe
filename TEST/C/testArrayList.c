@@ -1,7 +1,7 @@
 #include "Unity/src/unity.h"
 #include "../../C/simulation/arrayList.h"
 
-void setUp (void) {}
+void setUp(void) {}
 
 void test_createArrayList_should_not_be_null(void) {
     arrayList *al = createArrayList(1, 1);
@@ -23,20 +23,20 @@ void test_createArrayList_should_be_null_2(void) {
 
 void test_arrayListAdd_should_add(void) {
     arrayList *al = createArrayList(10, sizeof(int));
-    int worked = arrayListAdd(al, (void *)5);
+    int worked = arrayListAdd(al, (void *) 5);
     TEST_ASSERT_EQUAL(worked, 1);
-    TEST_ASSERT_EQUAL((int *)al->data[0], 5);
+    TEST_ASSERT_EQUAL((int *) al->data[0], 5);
     freeArrayList(&al);
 }
 
 void test_arrayListAdd_should_not_add_1(void) {
-    int worked = arrayListAdd(NULL, (void *)5);
+    int worked = arrayListAdd(NULL, (void *) 5);
     TEST_ASSERT_EQUAL(worked, 0);
 }
 
 void test_arrayListAdd_should_not_add_2(void) {
     arrayList *al = createArrayList(10, sizeof(int));
-    int worked = arrayListAdd(al, (void *)NULL);
+    int worked = arrayListAdd(al, (void *) NULL);
     TEST_ASSERT_EQUAL(worked, 0);
     freeArrayList(&al);
 }
@@ -52,7 +52,7 @@ void test_arrayListExpand_should_expand(void) {
 
 void test_arrayListGetPointer_should_get_pointer(void) {
     arrayList *al = createArrayList(10, sizeof(int));
-    arrayListAdd(al, (void *)5);
+    arrayListAdd(al, (void *) 5);
     int pointer = (int) arrayListGetPointer(al, 0);
     TEST_ASSERT_EQUAL(pointer, 5);
     freeArrayList(&al);
@@ -60,7 +60,7 @@ void test_arrayListGetPointer_should_get_pointer(void) {
 
 void test_arrayListGetPointer_should_not_get_pointer_1(void) {
     arrayList *al = createArrayList(10, sizeof(int));
-    arrayListAdd(al, (void *)5);
+    arrayListAdd(al, (void *) 5);
     int *pointer = (int *) arrayListGetPointer(al, 1);
     TEST_ASSERT_NULL(pointer);
     freeArrayList(&al);
@@ -68,7 +68,7 @@ void test_arrayListGetPointer_should_not_get_pointer_1(void) {
 
 void test_arrayListGetPointer_should_not_get_pointer_2(void) {
     arrayList *al = createArrayList(10, sizeof(int));
-    arrayListAdd(al, (void *)5);
+    arrayListAdd(al, (void *) 5);
     int *pointer = (int *) arrayListGetPointer(al, -1);
     TEST_ASSERT_NULL(pointer);
     freeArrayList(&al);
@@ -81,8 +81,8 @@ void test_arrayListGetPointer_should_not_get_pointer_3(void) {
 
 void test_arrayListRemoveElement_should_remove(void) {
     arrayList *al = createArrayList(10, sizeof(int));
-    arrayListAdd(al, (void *)5);
-    arrayListAdd(al, (void *)10);
+    arrayListAdd(al, (void *) 5);
+    arrayListAdd(al, (void *) 10);
     int pointer = (int) arrayListRemoveElement(al, 0);
     TEST_ASSERT_EQUAL(pointer, 5);
     pointer = (int) arrayListGetPointer(al, 0);
@@ -116,7 +116,7 @@ void test_freeArrayList(void) {
 }
 
 
-void tearDown (void) {}
+void tearDown(void) {}
 
 int main(void) {
     UNITY_BEGIN();

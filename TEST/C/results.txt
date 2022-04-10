@@ -1,3 +1,6 @@
+--------------------------------------------------------------------- 
+-                         TEST ARRAYLIST                            - 
+--------------------------------------------------------------------- 
 testArrayList.c:123:test_createArrayList_should_not_be_null:PASS
 testArrayList.c:124:test_createArrayList_should_be_null_1:PASS
 testArrayList.c:125:test_createArrayList_should_be_null_2:PASS
@@ -17,4 +20,27 @@ testArrayList.c:138:test_freeArrayList:PASS
 
 -----------------------
 16 Tests 0 Failures 0 Ignored 
+OK
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+--------------------------------------------------------------------- 
+-                         TEST HASHTABLE                            - 
+--------------------------------------------------------------------- 
+testHashTable.c:110:test_createHashTable_should_not_be_null:PASS
+testHashTable.c:111:test_createHashTable_should_be_null_1:PASS
+testHashTable.c:112:test_createHashTable_should_be_null_2:PASS
+testHashTable.c:113:test_hashTableAddElement_should_add_1:PASS
+testHashTable.c:114:test_hashTableAddElement_should_add_2:PASS
+testHashTable.c:115:test_hashTableAddElement_should_not_add_1:PASS
+testHashTable.c:116:test_hashTableAddElement_should_not_add_2:PASS
+testHashTable.c:117:test_hashTableRemoveElement_should_remove:PASS
+testHashTable.c:118:test_hashTableRemoveElement_should_not_remove_1:PASS
+testHashTable.c:119:test_hashTableRemoveElement_should_not_remove_2:PASS
+testHashTable.c:120:test_hashTableRemoveElement_should_not_remove_3:PASS
+testHashTable.c:121:test_hashTableRemoveElement_should_not_remove_4:PASS
+testHashTable.c:122:test_expandArray_should_expand:PASS
+testHashTable.c:123:test_expandArray_should_not_expand:PASS
+testHashTable.c:124:test_freeHashTable:PASS
+
+-----------------------
+15 Tests 0 Failures 0 Ignored 
 OK

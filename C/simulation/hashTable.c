@@ -3,8 +3,6 @@
  *  arrayLists. It can be used only by graphNode or graphEdge structs, because
  *  they have similar structure. HashTable saves only pointers to structs.
  */
-#include <malloc.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include "hashTable.h"
 #include "simulation.h"
@@ -18,8 +16,10 @@
  *         it was not possible to allocate memory
  */
 hashTable *createHashTable(int size, int itemSize) {
+    if (size <= 0 || itemSize <= 0) return NULL;
     int i;
     hashTable *table = malloc(sizeof(hashTable));
+    if (!table) return NULL;
     table->size = size > 0 ? size : 40;
     table->filledItems = 0;
     table->itemSize = itemSize;
