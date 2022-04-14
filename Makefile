@@ -1,7 +1,13 @@
 # C compiler
 CC=gcc
+
 # C compilation output
-COUT=server.exe
+ifeq ($(OS),Windows_NT) 
+	COUT=server.exe
+else
+	COUT=server
+endif
+
 # C compilation flags
 CFLAGS=-lpthread -lm
 # C source files
