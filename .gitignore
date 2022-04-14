@@ -5,6 +5,7 @@
 
 # frames
 frame*.csv
+merged.csv
 
 #dbg logs
 *.log
