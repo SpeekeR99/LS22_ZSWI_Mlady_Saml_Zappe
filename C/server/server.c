@@ -19,6 +19,8 @@
 #define MSG_MAX_LEN 2048
 #define CMD_MAX_LEN 14
 
+#define CLIENT_EXIT_CMD "I'LL BE BACK"
+
 /*-------- PROGRAM ARGUMENTS */
 
 #define REQ_ARGNUM 2
@@ -48,7 +50,7 @@ void *(*cmd_fns[CMDNUM])(int, void *) = {&send_data_from_simulation, &start_simu
  * @param IP The IP address to listen on. If null, INADDR_ANY is used.
  * @param port The port to listen on
  * @return The sockfd (int) of the listening socket, ready to accept a client
- * The queue of pending connections is of length 5, but only 1 client should request communication
+ * The queue of pending connections is of length 5, but only 1 client should request communication at a time
  */
 int create_listen_socket(const char *IP, int port) {
     /* Code by Yogesh Shukla et al. on GeeksforGeeks.org */
@@ -58,11 +60,12 @@ int create_listen_socket(const char *IP, int port) {
     int sockfd;
     struct sockaddr_in servaddr;
 
+    /* very WET code 🥵*/
     /* socket create and verification */
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
         printf("socket creation failed...\n");
-        exit(0);
+        exit(1);
     } else
         printf("Socket successfully created..\n");
 
@@ -75,14 +78,14 @@ int create_listen_socket(const char *IP, int port) {
     /* Binding newly created socket to given IP and verification */
     if ((bind(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr))) != 0) {
         printf("socket bind failed...\n");
-        exit(0);
+        exit(1);
     } else
         printf("Socket successfully binded.\n");
 
     /* Now server is ready to listen and verification */
     if ((listen(sockfd, 5)) != 0) {
         printf("Listen failed...\n");
-        exit(0);
+        exit(1);
     } else
         printf("Server listening..\n");
 
@@ -106,7 +109,7 @@ int create_connection(int sockfd) {
     connfd = accept(sockfd, (struct sockaddr *) &cli, &len);
     if (connfd < 0) {
         printf("server accept failed...\n");
-        exit(0);
+        return -1;
     } else
         printf("server accept the client...\n");
 
@@ -129,6 +132,12 @@ void comm_loop(int connfd) {
         bzero(cmd, CMD_MAX_LEN);
         if (!read(connfd, bf, MSG_MAX_LEN)) {
             printf("Connection lost\n");
+            return;
+        }
+        if (!strcmp(bf, CLIENT_EXIT_CMD)) {
+            /* close the connection when the client wants to disconnect */
+            close(connfd);
+            printf("Client disconnected\n");
             return;
         }
         sscanf(bf, "%s", cmd);
@@ -220,7 +229,8 @@ int main(int argc, char const *argv[]) {
        in the communication, the client gives commands to the server */
     for (;;) {
         connfd = create_connection(sockfd);
-        comm_loop(connfd);
+        if(connfd > 0)
+            comm_loop(connfd);
     }
 
 

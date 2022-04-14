@@ -114,6 +114,8 @@ int process_csv(country **the_country, const char *filepath) {
  * @return Pointer to country struct or NULL
  */
 country *create_country_from_csv(const char *filepath) {
+    if (!filepath) return NULL;
+
     int number_of_cities = number_of_cities_from_csv(filepath);
     if (number_of_cities < 0) return NULL;
 
