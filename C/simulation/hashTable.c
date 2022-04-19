@@ -3,6 +3,8 @@
  *  arrayLists. It can be used only by graphNode or graphEdge structs, because
  *  they have similar structure. HashTable saves only pointers to structs.
  */
+#include <malloc.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include "hashTable.h"
 #include "simulation.h"
@@ -10,18 +12,18 @@
 /**
  * Creates new hashTable with @param size for items with @param itemSize.
  *  Returns pointer to arrayList or NULL if it was not successful.
- * @param size number of arrayLists in the hashTable, must be greater than 0
+ * @param size number of arrayLists in the hashTable, must be >= 0
  * @param itemSize size of one element in the hashTable, must be greater than 0
- * @return pointer to new hashTable or NULL some of the parameters was <= 0 or
+ * @return pointer to new hashTable or NULL if some of the parameters was invalid or
  *         it was not possible to allocate memory
  */
 hashTable *createHashTable(int size, int itemSize) {
-    // TODO: fix this
-    // The next line breaks CsvManager but if it's not there TESTS will fail
-//    if (size <= 0 || itemSize <= 0) return NULL;
     int i;
+    if (size < 0 || itemSize <= 0) return NULL;
+
     hashTable *table = malloc(sizeof(hashTable));
     if (!table) return NULL;
+
     table->size = size > 0 ? size : 40;
     table->filledItems = 0;
     table->itemSize = itemSize;
