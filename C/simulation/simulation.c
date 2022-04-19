@@ -11,6 +11,9 @@
 #endif
 
 #define radians(degrees) degrees * (M_PI / 180.0)
+//number from <0,1) determines how many citizen will return to their hometown in each step
+#define goBackThreshold 0.8
+
 
 /** This function is one step of simulation where the citizens are moving between different cities
  *
@@ -20,18 +23,9 @@
  */
 int simulationStep(country *theCountry, GaussRandom *theGaussRandom) {
     int i;
-    int j;
-    int k;
-    int index;
-    double *doublePointer;
     city *theCity;
-    arrayList *theList;
-    citizen *theCitizen;
 
     if (!theCountry || !theGaussRandom) return EXIT_FAILURE;
-
-    doublePointer = malloc(sizeof(double));
-    if (!doublePointer) return EXIT_FAILURE;
 
     //go through all cities
     for (i = 0; i < theCountry->numberOfCities; i++) {
@@ -39,20 +33,57 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom) {
         computeDistances(i, theCountry);
         qsort(theCountry->distances, theCountry->numberOfCities, sizeof(cityDistance *), cmpCitiesByDistance);
 
-        //go through all citizens in a city
-        for (j = 0; j < theCity->citizens->size; j++) {
-            theList = theCity->citizens->array[j];
+        moveCitizens(theCountry, theCity, theGaussRandom);
+    }
 
-            //todo takes just 50% of citizens
-            for (k = 0; k < theList->filledItems; k += 2) {
-                theCitizen = (citizen *) arrayListGetPointer(theList, k);
+    goBackHome(theCountry);
 
-                //something to stop one citizen to move more than once per step (will be somehow changed)
-                if (theCitizen->timeFrame == -1) {
-                    theCitizen->timeFrame = 0;
-                    continue;
-                }
-                theCitizen->timeFrame = -1;
+    //update population of cities to current state
+    for (i = 0; i < theCountry->numberOfCities; i++) {
+        theCountry->cities[i]->population = theCountry->cities[i]->citizens->filledItems;
+    }
+
+    return EXIT_SUCCESS;
+}
+
+/**
+ * Function preforms moving of 50% of citizens in the country, citizents travel from some city
+ * to another randomly selected city
+ *
+ * @param theCountry initialized country
+ * @param theCity current city
+ * @param theGaussRandom gaussRandom struct with initialized mean and standard deviation
+
+ * @return EXIT_SUCCESS or EXIT_FAILURE in case of invalid parameters or if it is not possible
+ *         to allocate memory
+ */
+int moveCitizens(country *theCountry, city *theCity, GaussRandom *theGaussRandom) {
+    int j;
+    int k;
+    int index;
+    double *doublePointer;
+    arrayList *theList;
+    citizen *theCitizen;
+
+    if (!theCountry || !theCity || !theGaussRandom) return EXIT_FAILURE;
+
+    doublePointer = malloc(sizeof(double));
+    if (!doublePointer) return EXIT_FAILURE;
+
+    //go through all citizens in a city
+    for (j = 0; j < theCity->citizens->size; j++) {
+        theList = theCity->citizens->array[j];
+
+        //todo takes just 50% of citizens
+        for (k = 0; k < theList->filledItems; k += 2) {
+            theCitizen = (citizen *) arrayListGetPointer(theList, k);
+
+            //something to stop one citizen to move more than once per step (will be somehow changed)
+            if (theCitizen->timeFrame == -1) {
+                theCitizen->timeFrame = 0;
+                continue;
+            }
+            theCitizen->timeFrame = -1;
 
                 //maybe we could delete this, what can possibly happen :)
                 if (nextNormalDistDouble(theGaussRandom, doublePointer) == EXIT_FAILURE) {
@@ -60,24 +91,63 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom) {
                     return EXIT_FAILURE;
                 }
 
-                //finds city which is the closest (not really) to the distance which citizen should travel
-                index = interpolationSearch(*doublePointer, theCountry->numberOfCities, theCountry->distances);
-                //todo
-                index = theCountry->distances[index]->id;
+            //finds city which is the closest (not really) to the distance which citizen should travel
+            index = interpolationSearch(*doublePointer, theCountry->numberOfCities, theCountry->distances);
+            //todo
+            index = theCountry->distances[index]->id;
 
-                //move the citizen from one city to another
-                hashTableRemoveElement(j, k, theCity->citizens);
-                hashTableAddElement(theCitizen, theCitizen->id, theCountry->cities[index]->citizens);
+            //move the citizen from one city to another
+            hashTableRemoveElement(j, k, theCity->citizens);
+            hashTableAddElement(theCitizen, theCitizen->id, theCountry->cities[index]->citizens);
+        }
+    }
+
+    free(doublePointer);
+    return EXIT_SUCCESS;
+}
+
+/**
+ * Processes return of selected percent of citizens to their hometowns
+ * percent of citizens which return home can be changed by changing goBackThreshold macro
+ * @param theCountry non-null pointer to country struct
+ * @return EXIT_SUCCESS or EXIT_FAILURE if country pointer is invalid
+ */
+int goBackHome(country *theCountry) {
+    int i;
+    int j;
+    int k;
+    double returnChance;
+    city *theCity;
+    arrayList *theList;
+    citizen *theCitizen;
+
+    if (!theCountry) return EXIT_FAILURE;
+
+    for (i = 0; i < theCountry->numberOfCities; i++) {
+        theCity = theCountry->cities[i];
+
+        //go through all citizens in a city
+        for (j = 0; j < theCity->citizens->size; j++) {
+            theList = theCity->citizens->array[j];
+
+            for (k = 0; k < theList->filledItems; k++) {
+                theCitizen = (citizen *) arrayListGetPointer(theList, k);
+
+                //citizen is not in his hometown
+                if (i != theCitizen->homeTown) {
+
+                    //value from <0,1) if smaller than threshold, citizen moves to his hometown
+                    returnChance = (double) rand() / RAND_MAX;
+                    if (returnChance < goBackThreshold) {
+                        //move the citizen from this city to his hometown
+                        hashTableRemoveElement(j, k, theCity->citizens);
+                        hashTableAddElement(theCitizen, theCitizen->id, theCountry->cities[theCitizen->homeTown]->citizens);
+                    }
+                }
             }
         }
     }
 
-    //update population of cities to current state
-    for (i = 0; i < theCountry->numberOfCities; i++) {
-        theCountry->cities[i]->population = theCountry->cities[i]->citizens->filledItems;
-    }
-
-    free(doublePointer);
     return EXIT_SUCCESS;
 }
 
@@ -179,15 +249,17 @@ city *createCity(int city_id, int area, int population, int infected, double lat
 /**
  * Creates new citizen struct
  * @param id must be unique and greater than zero
+ * @param homeTown index of city where citizen is from
  * @return pointer to new citizen or NULL if parameter is invalid or it is
  *         not possible to allocate memory
  */
-citizen *createCitizen(int id) {
+citizen *createCitizen(int id, int homeTown) {
     citizen *theCitizen;
     if (id < 0) return NULL;
     theCitizen = calloc(1, sizeof(citizen));
     if (!theCitizen) return NULL;
     theCitizen->id = id;
+    theCitizen->homeTown = homeTown;
 
     return theCitizen;
 }

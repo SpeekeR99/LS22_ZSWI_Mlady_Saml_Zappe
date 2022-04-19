@@ -12,6 +12,7 @@
 
 typedef struct {
     int id;
+    int homeTown;
     char status;
     char timeFrame;
 }citizen;
@@ -48,11 +49,13 @@ void freeCityDistance(cityDistance **theCityDistance);
 int interpolationSearch(double distance, int citiesSize, cityDistance **cityDistances);
 void computeDistances(int cityIndex, country *theCountry);
 int simulationStep(country *theCountry, GaussRandom *theGaussRandom);
+int goBackHome(country *theCountry);
+int moveCitizens(country *theCountry, city *theCity, GaussRandom *theGaussRandom);
 
 
 country *createCountry(int numberOfCities);
 city *createCity(int city_id, int area, int population, int infected, double lat, double lon);
-citizen *createCitizen(int id);
+citizen *createCitizen(int id, int homeTown);
 void freeCountry(country **theCountry);
 void freeCity(city **theCity);
 void freeCitizen(citizen **theCitizen);
