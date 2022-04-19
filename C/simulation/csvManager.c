@@ -93,7 +93,7 @@ int process_csv(country **the_country, const char *filepath) {
         theCity = (*the_country)->cities[city_index];
 
         for (i = 0; i < theCity->population; i++) {
-            theCitizen = createCitizen(citizen_index);
+            theCitizen = createCitizen(citizen_index, city_index);
             if (!theCitizen) return 0;
             hashTableAddElement(theCitizen, citizen_index, theCity->citizens);
             citizen_index++;
