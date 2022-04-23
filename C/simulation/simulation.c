@@ -51,6 +51,7 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom) {
         theCountry->cities[i]->population = theCountry->cities[i]->citizens->filledItems;
     }
 
+    freeRandom(&random);
     return EXIT_SUCCESS;
 }
 
