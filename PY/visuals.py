@@ -239,15 +239,6 @@ app.layout = html.Div(  # Main div
                 ),
                 html.Div(  # Div with buttons
                     children=[
-                        dbc.Button(  # Button for triggering callback
-                            "Update data",
-                            id="update-button",
-                            n_clicks=0,
-                            outline=True,
-                            color="dark",
-                            size="lg",
-                            style={"margin-right": "100px"}
-                        ),
                         dbc.Button(  # Button that resets the view to default
                             "Reset",
                             id="reset-button",
@@ -269,6 +260,11 @@ app.layout = html.Div(  # Main div
                 "margin-top": "70px",
                 'vertical-align': 'top'
             }
+        ),
+        dcc.Interval(  # Timer component for updating data
+            id='update-timer',
+            interval=1 * 10000,  # in milliseconds
+            n_intervals=0
         )
     ]
 )
@@ -306,12 +302,12 @@ def remain_figure_state(new_fig, old_fig, z_slider_trigger=False, radius_slider_
 
 @app.callback(
     Output("map", "figure"),
-    Input("update-button", "n_clicks"),
+    Input("update-timer", "n_intervals"),
     State("map", "figure"))
 def update_button(update_input, curr_fig):
     """
     Update button callback, basically ONLY updates the dataframe, retains everything else as it was
-    :param update_input: unused input, how many times was the update-button pressed
+    :param update_input: unused input, how many times was the update-timer incremented
     :param curr_fig: Current state of figure, right before updating
     :return: Figure with updated DataFrame
     """
