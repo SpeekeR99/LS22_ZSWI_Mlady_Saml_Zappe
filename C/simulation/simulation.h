@@ -56,7 +56,7 @@ int goBackHome(country *theCountry);
 int moveCitizens(country *theCountry, city *theCity, GaussRandom *theGaussRandom);
 int spreadPhenomenon(country *theCountry, GaussRandom *random);
 void infectCitizensInCity(city *theCity, int toInfect);
-void resetCitizenIndexes(country *country);
+void resetCitizenStatuses(country *country);
 
 
 country *createCountry(int numberOfCities);

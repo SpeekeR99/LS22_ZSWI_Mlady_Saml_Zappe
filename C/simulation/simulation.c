@@ -40,7 +40,7 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom) {
 
         moveCitizens(theCountry, theCity, theGaussRandom);
     }
-    resetCitizenIndexes(theCountry);
+    resetCitizenStatuses(theCountry);
 
     GaussRandom *random = createRandom(SPREAD_MEAN, SPREAD_STD_DEV);
     if (!random) return EXIT_FAILURE;
@@ -60,7 +60,7 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom) {
  * Resets statuses for citizens which have traveled
  * @param country
  */
-void resetCitizenIndexes(country *country) {
+void resetCitizenStatuses(country *country) {
     int i;
     int j;
     int k;
