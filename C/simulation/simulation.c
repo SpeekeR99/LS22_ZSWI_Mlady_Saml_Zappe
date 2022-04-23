@@ -222,9 +222,9 @@ void infectCitizensInCity(city *theCity, int toInfect) {
         theCitizen = arrayListGetPointer(theCity->citizens->array[listIndex], citizenIndex);
 
         //already infected citizen
-        if (!theCitizen || theCitizen->status == 2) continue;
+        if (!theCitizen || theCitizen->status == INFECTED) continue;
 
-        theCitizen->status = 2;
+        theCitizen->status = INFECTED;
         theCitizen->timeFrame = 0;
         theCity->infected++;
     }
@@ -447,7 +447,7 @@ citizen *createCitizen(int id, int homeTown) {
     if (!theCitizen) return NULL;
     theCitizen->id = id;
     theCitizen->homeTown = homeTown;
-    theCitizen->status = 1;
+    theCitizen->status = NORMAL;
 
     return theCitizen;
 }
