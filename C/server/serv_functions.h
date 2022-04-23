@@ -37,7 +37,7 @@ void *start_simulation(int connfd, void *arg) {
 
     SIM_STARTED = 1;
 
-    return &tid;
+    return NULL;
 
 }
 
