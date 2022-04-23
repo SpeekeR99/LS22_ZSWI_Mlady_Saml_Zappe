@@ -51,7 +51,8 @@ void computeDistances(int cityIndex, country *theCountry);
 int simulationStep(country *theCountry, GaussRandom *theGaussRandom);
 int goBackHome(country *theCountry);
 int moveCitizens(country *theCountry, city *theCity, GaussRandom *theGaussRandom);
-
+int spreadPhenomenon(country *theCountry, GaussRandom *random);
+void infectCitizensInCity(city *theCity, int toInfect);
 
 country *createCountry(int numberOfCities);
 city *createCity(int city_id, int area, int population, int infected, double lat, double lon);
