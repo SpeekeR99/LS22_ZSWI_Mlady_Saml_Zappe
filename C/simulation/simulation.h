@@ -51,7 +51,9 @@ void freeCityDistance(cityDistance **theCityDistance);
 
 int interpolationSearch(double distance, int citiesSize, cityDistance **cityDistances);
 void computeDistances(int cityIndex, country *theCountry);
-int simulationStep(country *theCountry, GaussRandom *theGaussRandom);
+void simulate_day(country *theCountry, GaussRandom *theGaussRandom, GaussRandom *theSpreadRandom);
+void update_citizen_statuses(country *theCountry);
+int simulationStep(country *theCountry, GaussRandom *theGaussRandom, GaussRandom *theSpreadRandom);
 int goBackHome(country *theCountry);
 int moveCitizens(country *theCountry, city *theCity, GaussRandom *theGaussRandom);
 int spreadPhenomenon(country *theCountry, GaussRandom *random);
