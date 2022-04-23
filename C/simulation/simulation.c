@@ -596,11 +596,15 @@ int cmpCitiesByDistance(const void *a, const void *b) {
  */
 void *start_and_loop(void * args){
     country *ctry = create_country_from_csv(SIMULATION_INI_CSV);
+    if(!ctry){
+        fprintf(stderr, "Error: Could not create country from ini csv file\n");
+        return NULL;
+    }
     GaussRandom *grand = createRandom(MEAN, STDDEV);
     GaussRandom *spreadRandom = createRandom(SPREAD_MEAN, SPREAD_STD_DEV);
 
     /* filename: frameXXXX.csv = 13+1 chars = 14 (+1 = null term.) */
-    char filename[14] = {0};
+    char filename[40] = {0};
 
     for(int date = 0 ;; date++) {
         sprintf(filename, CSV_NAME_FORMAT, date);
