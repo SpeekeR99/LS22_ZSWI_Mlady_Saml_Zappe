@@ -2,6 +2,7 @@
 #include <math.h>
 #include <float.h>
 #include <stdio.h>
+#include <time.h>
 #include "simulation.h"
 #include "random.h"
 #include "csvManager.h"
@@ -538,11 +539,17 @@ void *start_and_loop(void * args){
 
     /* filename: frameXXXX.csv = 13+1 chars = 14 (+1 = null term.) */
     char filename[40] = {0};
+    clock_t start, end;
 
     for(int date = 0 ;; date++) {
+        start = clock();
+
         sprintf(filename, CSV_NAME_FORMAT, date);
         simulationStep(ctry, grand);
         create_csv_from_country(ctry, filename, date);
+        
+        end = clock();
+        printf("loop %i done in %f sec\n",date, ((double)(end-start))/CLOCKS_PER_SEC);
     }
 }
 

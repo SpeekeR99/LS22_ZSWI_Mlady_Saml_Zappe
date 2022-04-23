@@ -30,13 +30,11 @@ def create_and_connect_socket():
         print("Client part connected")
     except socket.gaierror as e:
         print("Address-related error connecting to server: %s" % e)
-        sockfd.shutdown(socket.SHUT_WR)
-        sockfd.close()
+        close_socket(sockfd)
         return None
     except socket.error as e:
         print("Connection error: %s" % e)
-        sockfd.shutdown(socket.SHUT_WR)
-        sockfd.close()
+        close_socket(sockfd)
         return None
     return sockfd
 
