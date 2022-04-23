@@ -40,6 +40,7 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom) {
 
         moveCitizens(theCountry, theCity, theGaussRandom);
     }
+    resetCitizenIndexes(theCountry);
 
     GaussRandom *random = createRandom(SPREAD_MEAN, SPREAD_STD_DEV);
     if (!random) return EXIT_FAILURE;
@@ -53,6 +54,35 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom) {
 
     freeRandom(&random);
     return EXIT_SUCCESS;
+}
+
+/**
+ * Resets statuses for citizens which have traveled
+ * @param country
+ */
+void resetCitizenIndexes(country *country) {
+    int i;
+    int j;
+    int k;
+    city *theCity;
+    arrayList *theList;
+    citizen *theCitizen;
+    if (!country) return;
+
+    //go through all citizens
+    for (i = 0; i < country->numberOfCities; i++) {
+        theCity = country->cities[i];
+
+        for (j = 0; j < theCity->citizens->size; j++) {
+            theList = theCity->citizens->array[j];
+
+            for (k = 0; k < theList->filledItems; k++) {
+                theCitizen = arrayListGetPointer(theList, k);
+                theCitizen->status = -theCitizen->status;
+            }
+        }
+    }
+
 }
 
 /**
@@ -118,9 +148,9 @@ void infectCitizensInCity(city *theCity, int toInfect) {
         theCitizen = arrayListGetPointer(theCity->citizens->array[listIndex], citizenIndex);
 
         //already infected citizen
-        if (!theCitizen || theCitizen->status == 1) continue;
+        if (!theCitizen || theCitizen->status == 2) continue;
 
-        theCitizen->status = 1;
+        theCitizen->status = 2;
         theCitizen->timeFrame = 0;
         theCity->infected++;
     }
@@ -158,12 +188,14 @@ int moveCitizens(country *theCountry, city *theCity, GaussRandom *theGaussRandom
         for (k = 0; k < theList->filledItems; k += 2) {
             theCitizen = (citizen *) arrayListGetPointer(theList, k);
 
+            if (theCitizen->status < 0) continue;
+            theCitizen->status = -theCitizen->status;
             //something to stop one citizen to move more than once per step (will be somehow changed)
-            if (theCitizen->timeFrame == -1) {
-                theCitizen->timeFrame = 0;
-                continue;
-            }
-            theCitizen->timeFrame = -1;
+//            if (theCitizen->timeFrame == -1) {
+//                theCitizen->timeFrame = 0;
+//                continue;
+//            }
+//            theCitizen->timeFrame = -1;
 
                 //maybe we could delete this, what can possibly happen :)
                 if (nextNormalDistDouble(theGaussRandom, doublePointer) == EXIT_FAILURE) {
@@ -340,6 +372,7 @@ citizen *createCitizen(int id, int homeTown) {
     if (!theCitizen) return NULL;
     theCitizen->id = id;
     theCitizen->homeTown = homeTown;
+    theCitizen->status = 1;
 
     return theCitizen;
 }
