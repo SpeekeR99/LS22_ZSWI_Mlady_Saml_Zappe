@@ -14,6 +14,9 @@ typedef struct {
     int id;
     int homeTown;
     char status;
+    //status 1 never infected
+    //status 2 infected
+    //status 3 cured
     char timeFrame;
 }citizen;
 
@@ -51,6 +54,9 @@ void computeDistances(int cityIndex, country *theCountry);
 int simulationStep(country *theCountry, GaussRandom *theGaussRandom);
 int goBackHome(country *theCountry);
 int moveCitizens(country *theCountry, city *theCity, GaussRandom *theGaussRandom);
+int spreadPhenomenon(country *theCountry, GaussRandom *random);
+void infectCitizensInCity(city *theCity, int toInfect);
+void resetCitizenStatuses(country *country);
 
 
 country *createCountry(int numberOfCities);
