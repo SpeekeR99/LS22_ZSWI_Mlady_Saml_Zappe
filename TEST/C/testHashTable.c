@@ -3,8 +3,14 @@
 
 void setUp(void) {}
 
-void test_createHashTable_should_not_be_null(void) {
+void test_createHashTable_should_not_be_null_1(void) {
     hashTable *ht = createHashTable(10, sizeof(int));
+    TEST_ASSERT_NOT_NULL(ht);
+    freeHashTable(&ht);
+}
+
+void test_createHashTable_should_not_be_null_2(void) {
+    hashTable *ht = createHashTable(0, sizeof(int));
     TEST_ASSERT_NOT_NULL(ht);
     freeHashTable(&ht);
 }
@@ -107,7 +113,8 @@ void tearDown(void) {}
 
 int main(void) {
     UNITY_BEGIN();
-    RUN_TEST(test_createHashTable_should_not_be_null);
+    RUN_TEST(test_createHashTable_should_not_be_null_1);
+    RUN_TEST(test_createHashTable_should_not_be_null_2);
     RUN_TEST(test_createHashTable_should_be_null_1);
     RUN_TEST(test_createHashTable_should_be_null_2);
     RUN_TEST(test_hashTableAddElement_should_add_1);

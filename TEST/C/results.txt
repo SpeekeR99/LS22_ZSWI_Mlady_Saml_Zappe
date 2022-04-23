@@ -26,8 +26,8 @@ OK
 -                         TEST HASHTABLE                            - 
 --------------------------------------------------------------------- 
 testHashTable.c:110:test_createHashTable_should_not_be_null:PASS
-testHashTable.c:14:test_createHashTable_should_be_null_1:FAIL: Expected NULL
-testHashTable.c:20:test_createHashTable_should_be_null_2:FAIL: Expected NULL
+testHashTable.c:111:test_createHashTable_should_be_null_1:PASS
+testHashTable.c:112:test_createHashTable_should_be_null_2:PASS
 testHashTable.c:113:test_hashTableAddElement_should_add_1:PASS
 testHashTable.c:114:test_hashTableAddElement_should_add_2:PASS
 testHashTable.c:115:test_hashTableAddElement_should_not_add_1:PASS
@@ -42,8 +42,8 @@ testHashTable.c:123:test_expandArray_should_not_expand:PASS
 testHashTable.c:124:test_freeHashTable:PASS
 
 -----------------------
-15 Tests 2 Failures 0 Ignored 
-FAIL
+15 Tests 0 Failures 0 Ignored 
+OK
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 --------------------------------------------------------------------- 
 -                        TEST CSV MANAGER                           - 
