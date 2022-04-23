@@ -1,0 +1,146 @@
+[
+  {
+    "rqs": {
+      "rqmList": [
+        {
+          "rqm": {
+            "prefix": "RQM.01.01",
+            "name": "Existence mapy",
+            "criticality": "critical",
+            "description": "\u003cp\u003eExistence mapy\u003c/p\u003e\n",
+            "category": "undefined"
+          }
+        },
+        {
+          "rqm": {
+            "prefix": "RQM.01.02",
+            "name": "Možnost interakce s mapou",
+            "criticality": "major",
+            "description": "\u003cp\u003eMožnost interakce s mapou\u003c/p\u003e\n",
+            "category": "undefined"
+          }
+        },
+        {
+          "rqm": {
+            "prefix": "RQM.01.03",
+            "name": "Existence dat při hoverování",
+            "criticality": "critical",
+            "description": "\u003cp\u003eExistence dat při hoverov\u0026aacute;n\u0026iacute; nad nimi\u003c/p\u003e\n",
+            "category": "undefined"
+          }
+        },
+        {
+          "rqm": {
+            "prefix": "RQM.01.04",
+            "name": "Existence legendy vpravo od mapy",
+            "criticality": "critical",
+            "description": "\u003cp\u003eExistence legendy barev vpravo od mapy\u003c/p\u003e\n",
+            "category": "undefined"
+          }
+        },
+        {
+          "rqm": {
+            "prefix": "RQM.01.05",
+            "name": "Existence animačního slideru pod mapou",
+            "criticality": "critical",
+            "description": "\u003cp\u003eExistence animačn\u0026iacute;ho slideru pod mapou (pokud jsou vygenerovan\u0026aacute; data)\u003c/p\u003e\n",
+            "category": "undefined"
+          }
+        }
+      ],
+      "prefix": "RQS.01",
+      "name": "Mapa",
+      "description": ""
+    }
+  },
+  {
+    "rqs": {
+      "rqsList": [
+        {
+          "rqs": {
+            "rqmList": [
+              {
+                "rqm": {
+                  "prefix": "RQM.02.02.01",
+                  "name": "Existence slideru",
+                  "criticality": "critical",
+                  "description": "\u003cp\u003eExistence slideru\u003c/p\u003e\n",
+                  "category": "undefined"
+                }
+              },
+              {
+                "rqm": {
+                  "prefix": "RQM.02.02.02",
+                  "name": "Interaktivní funkčnost slideru",
+                  "criticality": "major",
+                  "description": "\u003cp\u003eInteraktivn\u0026iacute; funkčnost slideru\u003c/p\u003e\n",
+                  "category": "undefined"
+                }
+              }
+            ],
+            "prefix": "RQS.02.02",
+            "name": "Radius slider",
+            "description": ""
+          }
+        },
+        {
+          "rqs": {
+            "rqmList": [
+              {
+                "rqm": {
+                  "prefix": "RQM.02.01.01",
+                  "name": "Existence slideru",
+                  "criticality": "minor",
+                  "description": "\u003cp\u003eExistence slideru\u003c/p\u003e\n",
+                  "category": "undefined"
+                }
+              },
+              {
+                "rqm": {
+                  "prefix": "RQM.02.01.02",
+                  "name": "Interaktivní funkčnost slideru",
+                  "criticality": "major",
+                  "description": "\u003cp\u003eInteraktivn\u0026iacute; funkčnost slideru\u003c/p\u003e\n",
+                  "category": "undefined"
+                }
+              }
+            ],
+            "prefix": "RQS.02.01",
+            "name": "Z slider",
+            "description": ""
+          }
+        }
+      ],
+      "prefix": "RQS.02",
+      "name": "Slidery",
+      "description": ""
+    }
+  },
+  {
+    "rqs": {
+      "rqmList": [
+        {
+          "rqm": {
+            "prefix": "RQM.03.01",
+            "name": "Existence tlačítka Reset",
+            "criticality": "major",
+            "description": "\u003cp\u003eExistence tlač\u0026iacute;tka Reset\u003c/p\u003e\n",
+            "category": "undefined"
+          }
+        },
+        {
+          "rqm": {
+            "prefix": "RQM.03.02",
+            "name": "Funkčnost tlačítka Reset",
+            "criticality": "minor",
+            "description": "\u003cp\u003eFunkčnost tlač\u0026iacute;tka Reset\u003c/p\u003e\n",
+            "category": "undefined"
+          }
+        }
+      ],
+      "prefix": "RQS.03",
+      "name": "Tlačítka",
+      "description": ""
+    }
+  }
+]
