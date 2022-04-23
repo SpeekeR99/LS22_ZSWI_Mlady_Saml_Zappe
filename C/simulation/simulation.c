@@ -10,10 +10,15 @@
 #    define M_PI 3.14159265358979323846
 #endif
 
-#define radians(degrees) degrees * (M_PI / 180.0)
+#define radians(degrees) (degrees) * (M_PI / 180.0)
 //number from <0,1) determines how many citizen will return to their hometown in each step
 #define goBackThreshold 0.8
+//number from <0,1) determines how many citizens will citizen meet
+#define densityToAbsolute 0.03
 
+
+#define SPREAD_MEAN 0.05
+#define SPREAD_STD_DEV 0.02
 
 /** This function is one step of simulation where the citizens are moving between different cities
  *
@@ -36,7 +41,10 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom) {
         moveCitizens(theCountry, theCity, theGaussRandom);
     }
 
-    goBackHome(theCountry);
+    GaussRandom *random = createRandom(SPREAD_MEAN, SPREAD_STD_DEV);
+    if (!random) return EXIT_FAILURE;
+
+    spreadPhenomenon(theCountry, random);
 
     //update population of cities to current state
     for (i = 0; i < theCountry->numberOfCities; i++) {
@@ -44,6 +52,77 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom) {
     }
 
     return EXIT_SUCCESS;
+}
+
+/**
+ * Function computes how many people will be infected in all cities,
+ * calls @function infectCitizensInCity to infect citizens
+ * @param theCountry country with cities
+ * @param random GaussRandom set up with spreading probabilities
+ *        otherwise can fall into infinite loop
+ * @return EXIT_SUCCESS or EXIT_FAILURE in case of invalid parameters
+ *         or if it's not possible to allocate memory
+ */
+int spreadPhenomenon(country *theCountry, GaussRandom *random) {
+    int i;
+    int j;
+    double populationDensity;
+    city *theCity;
+    double *doublePointer;
+    int toInfect;
+
+    doublePointer = malloc(sizeof(double));
+    if (!theCountry || !random || !doublePointer) return EXIT_FAILURE;
+
+    for (i = 0; i < theCountry->numberOfCities; i++) {
+        theCity = theCountry->cities[i];
+        populationDensity = (double) theCity->population / theCity->area;
+        toInfect = 0;
+
+        //compute how many people will be infected in this city
+        for (j = 0; j < theCity->infected; j++) {
+            //we need only numbers in interval <0,1>
+            do {
+                nextNormalDistDouble(random, doublePointer);
+            } while (*doublePointer < 0 || *doublePointer > 1);
+
+            toInfect += (int)(*doublePointer * populationDensity * densityToAbsolute);
+        }
+
+        infectCitizensInCity(theCity, toInfect);
+    }
+
+    free(doublePointer);
+    return EXIT_SUCCESS;
+}
+
+/**
+ * Function performs infecting of citizens in selected city
+ * @param theCity where citizens will be infected
+ * @param toInfect total number of citizens to be infected
+ */
+void infectCitizensInCity(city *theCity, int toInfect) {
+    int i;
+    int listIndex;
+    int maxListIndex;
+    int citizenIndex;
+    citizen *theCitizen;
+    if (!theCity || toInfect < 0) return;
+
+    for (i = 0; i < toInfect; i++) {
+        listIndex = (int) ((double) rand() / RAND_MAX) * theCity->citizens->size;
+        maxListIndex = theCity->citizens->array[listIndex]->filledItems;
+        citizenIndex = (int) ((double) rand() / RAND_MAX) * maxListIndex;
+
+        theCitizen = arrayListGetPointer(theCity->citizens->array[listIndex], citizenIndex);
+
+        //already infected citizen
+        if (!theCitizen || theCitizen->status == 1) continue;
+
+        theCitizen->status = 1;
+        theCitizen->timeFrame = 0;
+        theCity->infected++;
+    }
 }
 
 /**
