@@ -54,7 +54,7 @@ void computeDistances(int cityIndex, country *theCountry);
 void simulate_day(country *theCountry, GaussRandom *theGaussRandom, GaussRandom *theSpreadRandom);
 void update_citizen_statuses(country *theCountry);
 int simulationStep(country *theCountry, GaussRandom *theGaussRandom, GaussRandom *theSpreadRandom);
-int goBackHome(country *theCountry);
+int goBackHome(country *theCountry, double threshold);
 int moveCitizens(country *theCountry, city *theCity, GaussRandom *theGaussRandom);
 int spreadPhenomenon(country *theCountry, GaussRandom *random);
 void infectCitizensInCity(city *theCity, int toInfect);

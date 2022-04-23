@@ -38,7 +38,7 @@ void simulate_day(country *theCountry, GaussRandom *theGaussRandom, GaussRandom 
         if (hour % 8 == 0) goBackHome(theCountry, 0.8);
         else goBackHome(theCountry, 0.05);
     }
-    update_citizen_statuses(theCountry)
+    update_citizen_statuses(theCountry);
 }
 
 /**
@@ -50,13 +50,14 @@ void simulate_day(country *theCountry, GaussRandom *theGaussRandom, GaussRandom 
  * @param theCountry initialized country
  */
 void update_citizen_statuses(country *theCountry) {
-    double death_chance
+    double death_chance;
+    int i, j, k;
     city *theCity;
     arrayList *theList;
     citizen *theCitizen;
 
-    for (i = 0; i < country->numberOfCities; i++) {
-        theCity = country->cities[i];
+    for (i = 0; i < theCountry->numberOfCities; i++) {
+        theCity = theCountry->cities[i];
 
         for (j = 0; j < theCity->citizens->size; j++) {
             theList = theCity->citizens->array[j];
