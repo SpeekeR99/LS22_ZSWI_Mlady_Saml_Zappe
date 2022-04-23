@@ -11,22 +11,100 @@
 #endif
 
 #define radians(degrees) (degrees) * (M_PI / 180.0)
-//number from <0,1) determines how many citizen will return to their hometown in each step
-#define goBackThreshold 0.8
 //number from <0,1) determines how many citizens will citizen meet
 #define densityToAbsolute 0.03
 
+#define INFECTION_TIME_IN_DAYS 14
+#define IMMUNITY_AFTER_INFECTION_IN_DAYS 30
+
+#define NORMAL 1
+#define INFECTED 2
+#define RECOVERED 3
 
 #define SPREAD_MEAN 0.05
 #define SPREAD_STD_DEV 0.02
+
+/**
+ * Simulates a day of the simulation (one step is one hour of "real time")
+ * Calls simulationStep every hour
+ * Every 8 hours goBackHome function is called with threshold of 0.8
+ * Other hours the threshold is set to 0.05
+ * Calls update_citizen_statuses after each day
+ *
+ * @param theCountry initialized country
+ * @param theGaussRandom gaussRandom struct with initialized mean and standard deviation
+ * @param theSpreadRandom gaussRandom struct with initialized mean and standard deviation
+ */
+void simulate_day(country *theCountry, GaussRandom *theGaussRandom, GaussRandom *theSpreadRandom) {
+    int hour;
+    for (hour = 0; hour < 24; hour++) {
+        simulationStep(theCountry, theGaussRandom, theSpreadRandom);
+        if (hour % 8 == 0) goBackHome(theCountry, 0.8);
+        else goBackHome(theCountry, 0.05);
+    }
+    update_citizen_statuses(theCountry);
+}
+
+/**
+ * If the citizen is either infected or cured, their timeFrame gets incremented
+ * Every infected citizen has a chance of dying (being removed from the hashTable)
+ * If an infected citizen survived 14 days, he becomes cured
+ * If cured citizen is recovered for more than 30 days, he becomes infect-able again
+ *
+ * @param theCountry initialized country
+ */
+void update_citizen_statuses(country *theCountry) {
+    double death_chance;
+    int i, j, k;
+    city *theCity;
+    arrayList *theList;
+    citizen *theCitizen;
+
+    for (i = 0; i < theCountry->numberOfCities; i++) {
+        theCity = theCountry->cities[i];
+
+        for (j = 0; j < theCity->citizens->size; j++) {
+            theList = theCity->citizens->array[j];
+
+            for (k = 0; k < theList->filledItems; k++) {
+                theCitizen = arrayListGetPointer(theList, k);
+
+                // if citizen is either infected or cured, increment days infected (or cured)
+                if (theCitizen->status != NORMAL)
+                    theCitizen->timeFrame++;
+
+                // infected citizen
+                if (theCitizen->status == INFECTED) {
+
+                    // if the citizen is infected, there is a chance he will die
+                    death_chance = (double) rand() / RAND_MAX;
+                    if (death_chance < 0.001) { // todo fiddle around with this magic number
+                        hashTableRemoveElement(j, k, theCity->citizens);
+                        freeCitizen(&theCitizen);
+                        continue;
+                    }
+
+                    // if the citizen was infected for 14 days, he is cured now
+                    if (theCitizen->timeFrame == INFECTION_TIME_IN_DAYS)
+                        theCitizen->status = RECOVERED;
+                }
+
+                // if the citizen is cured for 30 days, he can be re-infected again
+                if (theCitizen->status == RECOVERED && theCitizen->timeFrame == IMMUNITY_AFTER_INFECTION_IN_DAYS)
+                    theCitizen->status = NORMAL;
+            }
+        }
+    }
+}
 
 /** This function is one step of simulation where the citizens are moving between different cities
  *
  * @param theCountry initialized country
  * @param theGaussRandom gaussRandom struct with initialized mean and standard deviation
+ * @param theSpreadRandom gaussRandom struct with initialized mean and standard deviation
  * @return EXIT_SUCCESS or EXIT_FAILURE
  */
-int simulationStep(country *theCountry, GaussRandom *theGaussRandom) {
+int simulationStep(country *theCountry, GaussRandom *theGaussRandom, GaussRandom *theSpreadRandom) {
     int i;
     city *theCity;
 
@@ -42,17 +120,13 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom) {
     }
     resetCitizenStatuses(theCountry);
 
-    GaussRandom *random = createRandom(SPREAD_MEAN, SPREAD_STD_DEV);
-    if (!random) return EXIT_FAILURE;
-
-    spreadPhenomenon(theCountry, random);
+    spreadPhenomenon(theCountry, theSpreadRandom);
 
     //update population of cities to current state
     for (i = 0; i < theCountry->numberOfCities; i++) {
         theCountry->cities[i]->population = theCountry->cities[i]->citizens->filledItems;
     }
 
-    freeRandom(&random);
     return EXIT_SUCCESS;
 }
 
@@ -222,9 +296,10 @@ int moveCitizens(country *theCountry, city *theCity, GaussRandom *theGaussRandom
  * Processes return of selected percent of citizens to their hometowns
  * percent of citizens which return home can be changed by changing goBackThreshold macro
  * @param theCountry non-null pointer to country struct
+ * @param threshold number from <0,1) determines how many citizen will return to their hometown
  * @return EXIT_SUCCESS or EXIT_FAILURE if country pointer is invalid
  */
-int goBackHome(country *theCountry) {
+int goBackHome(country *theCountry, double threshold) {
     int i;
     int j;
     int k;
@@ -250,7 +325,7 @@ int goBackHome(country *theCountry) {
 
                     //value from <0,1) if smaller than threshold, citizen moves to his hometown
                     returnChance = (double) rand() / RAND_MAX;
-                    if (returnChance < goBackThreshold) {
+                    if (returnChance < threshold) {
                         //move the citizen from this city to his hometown
                         hashTableRemoveElement(j, k, theCity->citizens);
                         hashTableAddElement(theCitizen, theCitizen->id, theCountry->cities[theCitizen->homeTown]->citizens);
@@ -530,18 +605,19 @@ int cmpCitiesByDistance(const void *a, const void *b) {
  */
 void *start_and_loop(void * args){
     country *ctry = create_country_from_csv(SIMULATION_INI_CSV);
-    if(!ctry) {
-        fprintf(stderr, "Error: Could not create country from ini CSV file\n");
+    if(!ctry){
+        fprintf(stderr, "Error: Could not create country from ini csv file\n");
         return NULL;
     }
     GaussRandom *grand = createRandom(MEAN, STDDEV);
+    GaussRandom *spreadRandom = createRandom(SPREAD_MEAN, SPREAD_STD_DEV);
 
     /* filename: frameXXXX.csv = 13+1 chars = 14 (+1 = null term.) */
     char filename[40] = {0};
 
     for(int date = 0 ;; date++) {
         sprintf(filename, CSV_NAME_FORMAT, date);
-        simulationStep(ctry, grand);
+        simulate_day(ctry, grand, spreadRandom);
         create_csv_from_country(ctry, filename, date);
     }
 }

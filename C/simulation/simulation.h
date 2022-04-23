@@ -4,8 +4,8 @@
 #include "hashTable.h"
 #include "random.h"
 
-#define SIMULATION_INI_CSV "DATA/initial.csv"
-#define CSV_NAME_FORMAT "DATA/frames/frame%04d.csv"
+#define SIMULATION_INI_CSV "./DATA/initial.csv"
+#define CSV_NAME_FORMAT "./DATA/frames/frame%04d.csv"
 #define MEAN    20.0
 #define STDDEV  20.0
 
@@ -51,8 +51,10 @@ void freeCityDistance(cityDistance **theCityDistance);
 
 int interpolationSearch(double distance, int citiesSize, cityDistance **cityDistances);
 void computeDistances(int cityIndex, country *theCountry);
-int simulationStep(country *theCountry, GaussRandom *theGaussRandom);
-int goBackHome(country *theCountry);
+void simulate_day(country *theCountry, GaussRandom *theGaussRandom, GaussRandom *theSpreadRandom);
+void update_citizen_statuses(country *theCountry);
+int simulationStep(country *theCountry, GaussRandom *theGaussRandom, GaussRandom *theSpreadRandom);
+int goBackHome(country *theCountry, double threshold);
 int moveCitizens(country *theCountry, city *theCity, GaussRandom *theGaussRandom);
 int spreadPhenomenon(country *theCountry, GaussRandom *random);
 void infectCitizensInCity(city *theCity, int toInfect);
