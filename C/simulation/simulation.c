@@ -17,6 +17,10 @@
 #define INFECTION_TIME_IN_DAYS 14
 #define IMMUNITY_AFTER_INFECTION_IN_DAYS 30
 
+#define NORMAL 1
+#define INFECTED 2
+#define RECOVERED 3
+
 #define SPREAD_MEAN 0.05
 #define SPREAD_STD_DEV 0.02
 
@@ -66,23 +70,28 @@ void update_citizen_statuses(country *theCountry) {
                 theCitizen = arrayListGetPointer(theList, k);
 
                 // if citizen is either infected or cured, increment days infected (or cured)
-                if (theCitizen->status != 1)
+                if (theCitizen->status != NORMAL)
                     theCitizen->timeFrame++;
 
                 // infected citizen
-                if (theCitizen->status == 2) {
+                if (theCitizen->status == INFECTED) {
+
                     // if the citizen is infected, there is a chance he will die
                     death_chance = (double) rand() / RAND_MAX;
-                    if (death_chance < 0.001) // todo fiddle around with this magic number
+                    if (death_chance < 0.001) { // todo fiddle around with this magic number
                         hashTableRemoveElement(j, k, theCity->citizens);
+                        freeCitizen(&theCitizen);
+                        continue;
+                    }
+
                     // if the citizen was infected for 14 days, he is cured now
                     if (theCitizen->timeFrame == INFECTION_TIME_IN_DAYS)
-                        theCitizen->status = 3;
+                        theCitizen->status = RECOVERED;
                 }
 
                 // if the citizen is cured for 30 days, he can be re-infected again
-                if (theCitizen->status == 3 && theCitizen->timeFrame == IMMUNITY_AFTER_INFECTION_IN_DAYS)
-                    theCitizen->status = 1;
+                if (theCitizen->status == RECOVERED && theCitizen->timeFrame == IMMUNITY_AFTER_INFECTION_IN_DAYS)
+                    theCitizen->status = NORMAL;
             }
         }
     }
