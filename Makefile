@@ -29,6 +29,8 @@ clean_all:
 	rm -f $(COUT)
 	rm -f DATA/frames/*
 	rm -f DATA/merged.csv
+	rm -f PY/__pycache__/*
+	rmdir PY/__pycache__
 
 clean: 
 	rm -f DATA/frames/*
