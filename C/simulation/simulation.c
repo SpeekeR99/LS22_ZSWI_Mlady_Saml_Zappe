@@ -336,7 +336,7 @@ int goBackHome(country *theCountry, double threshold) {
                             theCountry->cities[theCitizen->homeTown]->infected++;
                         }
 
-                        //move the citizen from this city to his hometown
+                        //move the citizen from actual city to his hometown
                         hashTableRemoveElement(j, k, theCity->citizens);
                         hashTableAddElement(theCitizen, theCitizen->id, theCountry->cities[theCitizen->homeTown]->citizens);
 
