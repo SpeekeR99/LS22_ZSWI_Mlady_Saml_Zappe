@@ -11,6 +11,7 @@ __port = 4242
 __host_ip = "127.0.0.1"
 SOCKET_BUFFER_SIZE = 4194304
 
+
 def create_and_connect_socket():
     """
     Creates and connects socket to server
@@ -29,13 +30,14 @@ def create_and_connect_socket():
         print("Client part connected")
     except socket.gaierror as e:
         print("Address-related error connecting to server: %s" % e)
-        __close_socket(sockfd)
+        close_socket(sockfd)
         return None
     except socket.error as e:
         print("Connection error: %s" % e)
-        __close_socket(sockfd)
+        close_socket(sockfd)
         return None
     return sockfd
+
 
 def __sock_send(sockfd, bmsg, single_send=False):
     """
@@ -58,6 +60,7 @@ def __sock_send(sockfd, bmsg, single_send=False):
 
     return success
 
+
 def close_socket(sockfd):
     """
     Closes socket
@@ -65,9 +68,10 @@ def close_socket(sockfd):
     :return: no return value
     """
     sockfd.send(SOCKET_EXIT_CODE)
-    #sockfd.shutdown(socket.SHUT_WR)
+    # sockfd.shutdown(socket.SHUT_WR)
     sockfd.close()
     print("Client disconnected\n")
+
 
 def socket_send(bytes_message, sock=None):
     """
@@ -83,7 +87,7 @@ def socket_send(bytes_message, sock=None):
         if sock is None:
             close_socket(sock)
             return False
-    
+
     if __sock_send(sock, bytes_message, single_send):
         return True
     return False
@@ -100,6 +104,7 @@ def set_ip(ip):
     global __host_ip
     __host_ip = ip
 
+
 def set_port(port: int):
     """
     Sets the port of the server
@@ -109,7 +114,8 @@ def set_port(port: int):
     global __port
     __port = port
 
-# VISULAISATION 
+
+# VISULAISATION
 
 MERGEPATH = "../DATA/merged.csv"
 INIPATH = "../DATA/initial.csv"
@@ -119,6 +125,7 @@ if platform.uname()[0] == "Windows":
 DEFAULT_Z_COEF = 5  # 8
 DEFAULT_RADIUS_COEF = 19.7 - 1.2 * SCALE_FACTOR  # 18.5 (100%) 18.2 (125%)
 FRAME = 0
+
 
 def __create_data_hash_table(filepath=INIPATH):
     """
@@ -137,6 +144,7 @@ def __create_data_hash_table(filepath=INIPATH):
             line = fp.readline().split(",")
     return hash_table
 
+
 def __initialize_merged_csv(source=INIPATH, filepath=MERGEPATH):
     """
     Creates and initializes merged.csv with frame value 0
@@ -153,8 +161,10 @@ def __initialize_merged_csv(source=INIPATH, filepath=MERGEPATH):
                          line[7])
                 line = ini.readline().split(",")
 
+
 CITY_ID_HASH_TABLE = __create_data_hash_table()
 __initialize_merged_csv()
+
 
 def create_default_figure(filepath=MERGEPATH, z_coef=DEFAULT_Z_COEF, radius_coef=DEFAULT_RADIUS_COEF):
     """
@@ -169,10 +179,11 @@ def create_default_figure(filepath=MERGEPATH, z_coef=DEFAULT_Z_COEF, radius_coef
         df,
         lat="latitude",
         lon="longitude",
-        z=df["pocet_obyvatel"] ** (1.0 / z_coef),  # Roots seem to work better than logarithms
-        radius=df["pocet_obyvatel"] ** (1.0 / (21 - radius_coef)),  # Roots seem to work better than logarithms
+        z=df["pocet_nakazenych"] ** (1.0 / z_coef),  # Roots seem to work better than logarithms
+        #  TODO - the +1 MAY cause some problems when there are no cases in the city
+        radius=(df["pocet_nakazenych"] + 1) ** (1.0 / (21 - radius_coef)),  # Roots seem to work better than logarithms
         hover_name="nazev_obce",
-        hover_data=["nazev_obce", "kod_obce", "pocet_obyvatel"],
+        hover_data=["nazev_obce", "kod_obce", "pocet_obyvatel", "pocet_nakazenych"],
         animation_frame="datum",
         mapbox_style="open-street-map",
         center=dict(lat=49.88537, lon=15.3684),
@@ -181,6 +192,7 @@ def create_default_figure(filepath=MERGEPATH, z_coef=DEFAULT_Z_COEF, radius_coef
     )
     fig.update_layout(hoverlabel=dict(bgcolor="white", font_size=16, font_family="Inter"))
     return fig
+
 
 def update_data_csv(csv_data):
     """
@@ -191,7 +203,7 @@ def update_data_csv(csv_data):
     :param csv_data: New csv data frame, expected format is the same as the output format from csvManager.c
     :return: no return value
     """
-    
+
     if csv_data.startswith("no data"):
         return
     print("data recieved\n")
@@ -201,7 +213,7 @@ def update_data_csv(csv_data):
         lines = csv_data.split("\n")
         lines.pop(0)
         for line in lines:
-            #with open("dbg.log","a") as dbg:
+            # with open("dbg.log","a") as dbg:
             #    dbg.write(line)
             #    dbg.write("\n")
             if line == "\x04":
@@ -218,6 +230,7 @@ def update_data_csv(csv_data):
             fp.write("\n" + nazev_obce + "," + kod_obce + "," + latitude + "," + longitude + "," + pocet_obyvatel + ","
                      + pocet_nakazenych + "," + datum)
 
+
 def update_img(cur_fig):
     """
     Reads data from server, updates the data
@@ -227,7 +240,7 @@ def update_img(cur_fig):
     """
     sockfd = create_and_connect_socket()
 
-    socket_send( ("send_data " + str(FRAME)).encode(), sockfd)
+    socket_send(("send_data " + str(FRAME)).encode(), sockfd)
 
     csv_data = bytes()
 
@@ -235,16 +248,17 @@ def update_img(cur_fig):
         csv_data = csv_data + sockfd.recv(SOCKET_BUFFER_SIZE)
 
     csv_str = csv_data.decode("ascii")
-    #with open("dbg.log","w") as dbg:
+    # with open("dbg.log","w") as dbg:
     #    dbg.write(csv_str)
     #    dbg.write("recv end\n")
-    
+
     close_socket(sockfd)
     update_data_csv(csv_str)
 
     fig = create_default_figure()
     fig = remain_figure_state(fig, cur_fig)
     return fig
+
 
 def remain_figure_state(new_fig, old_fig, z_slider_trigger=False, radius_slider_trigger=False):
     """
