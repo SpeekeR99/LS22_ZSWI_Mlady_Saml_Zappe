@@ -85,7 +85,6 @@ def socket_send(bytes_message, sock=None):
         single_send = True
         sock = create_and_connect_socket()
         if sock is None:
-            close_socket(sock)
             return False
 
     if __sock_send(sock, bytes_message, single_send):
