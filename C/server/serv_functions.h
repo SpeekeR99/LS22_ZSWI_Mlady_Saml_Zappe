@@ -68,7 +68,7 @@ void *send_data_from_simulation(int connfd, void *arg) {
     printf("frame: %i\n", frame);
     return;*/
 
-    char fname[14] = {0};
+    char fname[40] = {0};
     sprintf(fname, CSV_NAME_FORMAT, frame);
 
     printf("sending data from %s\n", fname);
