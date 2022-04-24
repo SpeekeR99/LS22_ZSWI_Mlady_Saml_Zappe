@@ -92,7 +92,16 @@ int process_csv(country **the_country, const char *filepath) {
         (*the_country)->cities[city_index] = createCity(city_id, area, population, infected, lat, lon);
         theCity = (*the_country)->cities[city_index];
 
-        for (i = 0; i < theCity->population; i++) {
+        //set up infected citizens first
+        for (i = 0; i < theCity->infected; i++) {
+            theCitizen = createCitizen(citizen_index, city_index);
+            if (!theCitizen) return 0;
+            theCitizen->status = INFECTED;
+            hashTableAddElement(theCitizen, citizen_index, theCity->citizens);
+            citizen_index++;
+        }
+
+        for (i = 0; i < theCity->population - theCity->infected; i++) {
             theCitizen = createCitizen(citizen_index, city_index);
             if (!theCitizen) return 0;
             hashTableAddElement(theCitizen, citizen_index, theCity->citizens);

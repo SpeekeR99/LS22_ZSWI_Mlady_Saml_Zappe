@@ -18,10 +18,6 @@
 #define INFECTION_TIME_IN_DAYS 14
 #define IMMUNITY_AFTER_INFECTION_IN_DAYS 30
 
-#define NORMAL 1
-#define INFECTED 2
-#define RECOVERED 3
-
 #define SPREAD_MEAN 0.05
 #define SPREAD_STD_DEV 0.02
 
@@ -283,6 +279,12 @@ int moveCitizens(country *theCountry, city *theCity, GaussRandom *theGaussRandom
             //todo
             index = theCountry->distances[index]->id;
 
+            //if citizen is infected, counters must be updated
+            if (theCitizen->status == INFECTED) {
+                theCity->infected--;
+                theCountry->cities[index]->infected++;
+            }
+
             //move the citizen from one city to another
             hashTableRemoveElement(j, k, theCity->citizens);
             hashTableAddElement(theCitizen, theCitizen->id, theCountry->cities[index]->citizens);
@@ -328,7 +330,7 @@ int goBackHome(country *theCountry, double threshold) {
                     returnChance = (double) rand() / RAND_MAX;
                     if (returnChance < threshold) {
 
-                        //if citizen is infected, counter must be updated
+                        //if citizen is infected, counters must be updated
                         if (theCitizen->status == INFECTED) {
                             theCity->infected--;
                             theCountry->cities[theCitizen->homeTown]->infected++;
