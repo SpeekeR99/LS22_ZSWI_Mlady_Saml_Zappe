@@ -327,9 +327,17 @@ int goBackHome(country *theCountry, double threshold) {
                     //value from <0,1) if smaller than threshold, citizen moves to his hometown
                     returnChance = (double) rand() / RAND_MAX;
                     if (returnChance < threshold) {
+
+                        //if citizen is infected, counter must be updated
+                        if (theCitizen->status == INFECTED) {
+                            theCity->infected--;
+                            theCountry->cities[theCitizen->homeTown]->infected++;
+                        }
+
                         //move the citizen from this city to his hometown
                         hashTableRemoveElement(j, k, theCity->citizens);
                         hashTableAddElement(theCitizen, theCitizen->id, theCountry->cities[theCitizen->homeTown]->citizens);
+
                     }
                 }
             }
