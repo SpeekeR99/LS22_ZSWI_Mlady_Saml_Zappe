@@ -40,7 +40,7 @@ void simulate_day(country *theCountry, GaussRandom *theGaussRandom, GaussRandom 
     int hour;
     for (hour = 0; hour < 24; hour++) {
         simulationStep(theCountry, theGaussRandom, theSpreadRandom);
-        if (hour % 8 == 0) goBackHome(theCountry, 0.8);
+        if ((hour + 1) % 8 == 0) goBackHome(theCountry, 0.8);
         else goBackHome(theCountry, 0.05);
     }
     update_citizen_statuses(theCountry);
