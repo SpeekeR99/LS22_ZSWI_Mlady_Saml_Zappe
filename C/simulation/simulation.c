@@ -71,8 +71,7 @@ void update_citizen_statuses(country *theCountry) {
                 theCitizen = arrayListGetPointer(theList, k);
 
                 // if citizen is either infected or cured, increment days infected (or cured)
-                if (theCitizen->status != NORMAL)
-                    theCitizen->timeFrame++;
+                if (theCitizen->status != NORMAL) theCitizen->timeFrame++;
 
                 // infected citizen
                 if (theCitizen->status == INFECTED) {
@@ -109,7 +108,7 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom, GaussRandom
     int i;
     city *theCity;
 
-    if (!theCountry || !theGaussRandom) return EXIT_FAILURE;
+    if (!theCountry || !theGaussRandom || !theSpreadRandom) return EXIT_FAILURE;
 
     //go through all cities
     for (i = 0; i < theCountry->numberOfCities; i++) {
@@ -133,6 +132,8 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom, GaussRandom
 
 /**
  * Resets statuses for citizens which have traveled
+ * traveling sets status = -status, this function sets
+ * their status = -status, so it's the same as before moving
  * @param country
  */
 void resetCitizenStatuses(country *country) {
@@ -153,7 +154,7 @@ void resetCitizenStatuses(country *country) {
 
             for (k = 0; k < theList->filledItems; k++) {
                 theCitizen = arrayListGetPointer(theList, k);
-                theCitizen->status = -theCitizen->status;
+                if (theCitizen->status < 0) theCitizen->status = -theCitizen->status;
             }
         }
     }
@@ -177,8 +178,10 @@ int spreadPhenomenon(country *theCountry, GaussRandom *random) {
     double *doublePointer;
     int toInfect;
 
+    if (!theCountry || !random) return EXIT_FAILURE;
+
     doublePointer = malloc(sizeof(double));
-    if (!theCountry || !random || !doublePointer) return EXIT_FAILURE;
+    if (!doublePointer) return EXIT_FAILURE;
 
     for (i = 0; i < theCountry->numberOfCities; i++) {
         theCity = theCountry->cities[i];
@@ -263,20 +266,17 @@ int moveCitizens(country *theCountry, city *theCity, GaussRandom *theGaussRandom
         for (k = 0; k < theList->filledItems; k += 2) {
             theCitizen = (citizen *) arrayListGetPointer(theList, k);
 
+            //citizen has moved already
             if (theCitizen->status < 0) continue;
-            theCitizen->status = -theCitizen->status;
-            //something to stop one citizen to move more than once per step (will be somehow changed)
-//            if (theCitizen->timeFrame == -1) {
-//                theCitizen->timeFrame = 0;
-//                continue;
-//            }
-//            theCitizen->timeFrame = -1;
 
-                //maybe we could delete this, what can possibly happen :)
-                if (nextNormalDistDouble(theGaussRandom, doublePointer) == EXIT_FAILURE) {
-                    free(doublePointer);
-                    return EXIT_FAILURE;
-                }
+            //this citizen will be moved, flag which notifies about that
+            theCitizen->status = -theCitizen->status;
+
+            //maybe we could delete this, what can possibly happen :)
+            if (nextNormalDistDouble(theGaussRandom, doublePointer) == EXIT_FAILURE) {
+                free(doublePointer);
+                return EXIT_FAILURE;
+            }
 
             //finds city which is the closest (not really) to the distance which citizen should travel
             index = interpolationSearch(*doublePointer, theCountry->numberOfCities, theCountry->distances);
