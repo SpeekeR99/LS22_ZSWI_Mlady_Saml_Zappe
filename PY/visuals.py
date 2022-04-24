@@ -101,7 +101,6 @@ app.layout = html.Div(  # Main div
 )
 
 
-
 @app.callback(
     Output("map", "figure"),
     Input("update-timer", "n_intervals"),
