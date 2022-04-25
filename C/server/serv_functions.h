@@ -60,7 +60,7 @@ void *send_data_from_simulation(int connfd, void *arg) {
     char *bff = malloc(SEND_MAX_SIZE * sizeof(char));
 
     int frame = 0;
-    sscanf((const unsigned char *) arg, "%*s %d", &frame);
+    sscanf((const char *) arg, "%*s %d", &frame);
 
     /* debug
     printf((const char *)arg);

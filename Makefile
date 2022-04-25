@@ -9,7 +9,7 @@ else
 endif
 
 # C compilation flags
-CFLAGS=-lpthread -lm
+CFLAGS=-Wall -lpthread -lm
 # C source files
 CFILES=$(wildcard C/server/*.c) $(wildcard C/simulation/*.c)
 
