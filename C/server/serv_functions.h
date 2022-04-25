@@ -71,7 +71,7 @@ void *send_data_from_simulation(int connfd, void *arg) {
     char fname[40] = {0};
     sprintf(fname, CSV_NAME_FORMAT, frame);
 
-    printf("sending data from %s\n", fname);
+    printf("Sending data from %s\n", fname);
 
     FILE *csv;
     if (!(csv = fopen((const char *) fname, "r"))) {

@@ -64,10 +64,10 @@ int create_listen_socket(const char *IP, int port) {
     /* socket create and verification */
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
-        printf("socket creation failed...\n");
+        printf("Socket creation failed...\n");
         exit(1);
     } else
-        printf("Socket successfully created..\n");
+        printf("Socket successfully created...\n");
 
     memset(&servaddr, 0, sizeof(servaddr));
     /* assign IP, PORT */
@@ -77,17 +77,17 @@ int create_listen_socket(const char *IP, int port) {
 
     /* Binding newly created socket to given IP and verification */
     if ((bind(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr))) != 0) {
-        printf("socket bind failed...\n");
+        printf("Socket bind failed...\n");
         exit(1);
     } else
-        printf("Socket successfully binded.\n");
+        printf("Socket successfully binded...\n");
 
     /* Now server is ready to listen and verification */
     if ((listen(sockfd, 5)) != 0) {
         printf("Listen failed...\n");
         exit(1);
     } else
-        printf("Server listening..\n");
+        printf("Server listening...\n");
 
     return sockfd;
 }
@@ -108,10 +108,10 @@ int create_connection(int sockfd) {
        This will halt the program until an outside client tries to connect */
     connfd = accept(sockfd, (struct sockaddr *) &cli, &len);
     if (connfd < 0) {
-        printf("server accept failed...\n");
+        printf("Server failed to accept the client...\n");
         return -1;
     } else
-        printf("server accept the client...\n");
+        printf("Server accept the client...\n");
 
     return connfd;
 }
