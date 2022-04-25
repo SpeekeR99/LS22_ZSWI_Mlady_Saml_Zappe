@@ -10,6 +10,7 @@ if len(sys.argv) == 3:
     set_port(int(sys.argv[2]))
 
 app = DashProxy(
+    name="visuals",
     prevent_initial_callbacks=True,
     transforms=[MultiplexerTransform()],  # More callbacks for one output
     external_stylesheets=[dbc.themes.BOOTSTRAP]  # Bootstrap
@@ -164,4 +165,4 @@ def radius_slider(radius_coef, curr_fig):
 
 if __name__ == '__main__':
     socket_send(b"start")
-    app.run_server(debug=True)
+    app.run_server(debug=True, use_reloader=False)
