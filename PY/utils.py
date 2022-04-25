@@ -48,8 +48,11 @@ def __sock_send(sockfd, bmsg, single_send=False):
     """
     success = False
     try:
-        sockfd.send(bmsg)
-        success = True
+        if sockfd.send(bmsg) == len(bmsg):
+            print(f"'{bmsg.decode()}' message sent")
+            success = True
+        else:
+            print(f"\tMessage '{bmsg.decode()}' not sent")
     except socket.timeout:
         print("Error: Server timed out.")
     except socket.error:

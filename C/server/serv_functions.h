@@ -27,7 +27,7 @@ void *out(int connfd, void *arg) {
  */
 void *start_simulation(int connfd, void *arg) {
     if (SIM_STARTED) {
-        //write(connfd, "already started\n", strlen("already started\n"));
+        printf("Simulation already running\n");
         return NULL;
     }
 

@@ -163,5 +163,6 @@ def radius_slider(radius_coef, curr_fig):
 
 
 if __name__ == '__main__':
-    socket_send(b"start")
-    app.run_server(debug=True)
+    if not socket_send(b"start"):
+        print("Could not send 'start' to server")
+    app.run_server(debug=True, use_reloader=False)

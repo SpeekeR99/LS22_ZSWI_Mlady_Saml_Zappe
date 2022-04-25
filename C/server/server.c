@@ -134,7 +134,7 @@ void comm_loop(int connfd) {
             printf("Connection lost\n");
             return;
         }
-        if (!strcmp(bf, CLIENT_EXIT_CMD)) {
+        if (!strncmp(bf, CLIENT_EXIT_CMD, strlen(CLIENT_EXIT_CMD))) {
             /* close the connection when the client wants to disconnect */
             close(connfd);
             printf("Client disconnected\n");
