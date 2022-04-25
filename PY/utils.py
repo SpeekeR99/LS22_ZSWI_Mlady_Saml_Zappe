@@ -43,7 +43,7 @@ def __sock_send(sockfd, bmsg, single_send=False):
     """
     Sends message to server
     :param sockfd: client socket
-    :param bmsg: bytes message to send
+    :param bmsg: bytes message to send (raw data, with ending \\x04)
     :return: True if message was sent, False otherwise (error)
     """
     success = False
@@ -70,7 +70,7 @@ def close_socket(sockfd):
     :param sockfd: Socket to close
     :return: no return value
     """
-    sockfd.send(SOCKET_EXIT_CODE)
+    socket_send(SOCKET_EXIT_CODE, sockfd)
     # sockfd.shutdown(socket.SHUT_WR)
     sockfd.close()
     print("Client disconnected\n")
@@ -79,10 +79,11 @@ def close_socket(sockfd):
 def socket_send(bytes_message, sock=None):
     """
     Sends message to server
-    :param bytes_message: bytes message to send
+    :param bytes_message: bytes message to send, without ending \\x04 (will be added)
     :param sock: socket of client, if None, creates new socket and discards afterwards
     :return: True if message was sent, False otherwise (error)
     """
+    bytes_message += b'\x04'
     single_send = False
     if sock is None:
         single_send = True
@@ -122,7 +123,9 @@ def socket_send_and_read(bytes_message):
     if sock is None:
         return None
     if socket_send(bytes_message, sock):
-        return socket_read(sock)
+        msg = socket_read(sock)
+        close_socket(sock)
+        return msg
     return None
 
 # SETTERS
@@ -270,7 +273,7 @@ def update_img(cur_fig):
     :param cur_fig: Figure to be updated
     :return: figure with new data, same state as cur_fig
     """
-    csv_str = socket_send_and_read((f"send_data {frame}").encode()).decode()
+    csv_str = socket_send_and_read( (f"send_data {frame}").encode() ).decode()
     update_data_csv(csv_str)
 
     fig = create_default_figure()
