@@ -145,14 +145,17 @@ void comm_loop(int connfd) {
            (should be a name of a command from cmds array) */
 
         //printf("recieved (whole, command): %s %s", bf, cmd);
-
-        for (size_t i = 0; i < CMDNUM; i++)
+        size_t i;
+        for (i = 0; i < CMDNUM; i++)
             /* find command and call it with the connection file descriptor and the recieved line as its arguments */
             if (!strcmp(cmds[i], cmd)) {
                 printf("Calling command: %s\n", cmd);
                 cmd_fns[i](connfd, (void *) bf);
+                i = -1;
                 break;
             }
+        if(i != -1)
+            printf("Unknown command: %s\n", cmd);
 
         //printf("Message recieved, but was not command: %s\n", bf);
 
