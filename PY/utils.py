@@ -22,7 +22,7 @@ def create_and_connect_socket():
         sockfd = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         print("Socket successfully created")
     except socket.error as err:
-        print("socket creation failed with error %s" % err)
+        print("Socket creation failed with error %s" % err)
         return None
 
     try:
@@ -48,10 +48,13 @@ def __sock_send(sockfd, bmsg, single_send=False):
     """
     success = False
     try:
-        sockfd.send(bmsg)
-        success = True
+        if sockfd.send(bmsg) == len(bmsg):
+            print(f"\tMessage '{bmsg.decode()}' sent")
+            success = True
+        else:
+            print(f"\tMessage '{bmsg.decode()}' not sent")
     except socket.timeout:
-        print("Error: Server timed out.")
+        print("Error: server timed out.")
     except socket.error:
         print("Error: could not write to server.")
     finally:
@@ -91,6 +94,36 @@ def socket_send(bytes_message, sock=None):
         return True
     return False
 
+def socket_read(sock):
+    """
+    Reads message from server
+    :param sock: socket of client
+    :return: Bytes message from server
+    """
+    msg = b""
+    try:
+        while True:
+            msg += sock.recv(SOCKET_BUFFER_SIZE)
+            if msg.endswith(b'\x04'):
+                break
+    except socket.timeout:
+        print("Error: server timed out.")
+    except socket.error:
+        print("Error: could not read from server.")
+    return msg
+
+def socket_send_and_read(bytes_message):
+    """
+    Sends message to server and reads response
+    :param bytes_message: Bytes message to send
+    :return: Response from server (bytes)
+    """
+    sock = create_and_connect_socket()
+    if sock is None:
+        return None
+    if socket_send(bytes_message, sock):
+        return socket_read(sock)
+    return None
 
 # SETTERS
 
@@ -123,7 +156,7 @@ if platform.uname()[0] == "Windows":
     SCALE_FACTOR = ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100
 DEFAULT_Z_COEF = 5  # 8
 DEFAULT_RADIUS_COEF = 19.7 - 1.2 * SCALE_FACTOR  # 18.5 (100%) 18.2 (125%)
-FRAME = 0
+frame = 0
 
 
 def __create_data_hash_table(filepath=INIPATH):
@@ -205,9 +238,9 @@ def update_data_csv(csv_data):
 
     if csv_data.startswith("no data"):
         return
-    print("data recieved\n")
-    global FRAME
-    FRAME = FRAME + 1
+    print("Data received\n")
+    global frame
+    frame = frame + 1
     with open(MERGEPATH, "a", encoding="utf8") as fp:
         lines = csv_data.split("\n")
         lines.pop(0)
@@ -237,21 +270,7 @@ def update_img(cur_fig):
     :param cur_fig: Figure to be updated
     :return: figure with new data, same state as cur_fig
     """
-    sockfd = create_and_connect_socket()
-
-    socket_send(("send_data " + str(FRAME)).encode(), sockfd)
-
-    csv_data = bytes()
-
-    while not csv_data.endswith(b'\x04'):
-        csv_data = csv_data + sockfd.recv(SOCKET_BUFFER_SIZE)
-
-    csv_str = csv_data.decode("ascii")
-    # with open("dbg.log","w") as dbg:
-    #    dbg.write(csv_str)
-    #    dbg.write("recv end\n")
-
-    close_socket(sockfd)
+    csv_str = socket_send_and_read((f"send_data {frame}").encode()).decode()
     update_data_csv(csv_str)
 
     fig = create_default_figure()
