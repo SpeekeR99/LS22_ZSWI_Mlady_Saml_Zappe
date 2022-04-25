@@ -94,6 +94,36 @@ def socket_send(bytes_message, sock=None):
         return True
     return False
 
+def socket_read(sock):
+    """
+    Reads message from server
+    :param sock: socket of client
+    :return: Bytes message from server
+    """
+    msg = b""
+    try:
+        while True:
+            msg += sock.recv(SOCKET_BUFFER_SIZE)
+            if msg.endswith(b'\x04'):
+                break
+    except socket.timeout:
+        print("Error: server timed out.")
+    except socket.error:
+        print("Error: could not read from server.")
+    return msg
+
+def socket_send_and_read(bytes_message):
+    """
+    Sends message to server and reads response
+    :param bytes_message: Bytes message to send
+    :return: Response from server (bytes)
+    """
+    sock = create_and_connect_socket()
+    if sock is None:
+        return None
+    if socket_send(bytes_message, sock):
+        return socket_read(sock)
+    return None
 
 # SETTERS
 
@@ -240,21 +270,7 @@ def update_img(cur_fig):
     :param cur_fig: Figure to be updated
     :return: figure with new data, same state as cur_fig
     """
-    sockfd = create_and_connect_socket()
-
-    socket_send(("send_data " + str(frame)).encode(), sockfd)
-
-    csv_data = bytes()
-
-    while not csv_data.endswith(b'\x04'):
-        csv_data = csv_data + sockfd.recv(SOCKET_BUFFER_SIZE)
-
-    csv_str = csv_data.decode("ascii")
-    # with open("dbg.log","w") as dbg:
-    #    dbg.write(csv_str)
-    #    dbg.write("recv end\n")
-
-    close_socket(sockfd)
+    csv_str = socket_send_and_read((f"send_data {frame}").encode()).decode()
     update_data_csv(csv_str)
 
     fig = create_default_figure()
