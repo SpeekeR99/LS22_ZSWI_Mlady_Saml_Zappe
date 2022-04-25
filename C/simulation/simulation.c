@@ -77,12 +77,15 @@ void update_citizen_statuses(country *theCountry) {
                     if (death_chance < 0.001) { // todo fiddle around with this magic number
                         hashTableRemoveElement(j, k, theCity->citizens);
                         freeCitizen(&theCitizen);
+                        theCity->infected--;
                         continue;
                     }
 
                     // if the citizen was infected for 14 days, he is cured now
-                    if (theCitizen->timeFrame == INFECTION_TIME_IN_DAYS)
+                    if (theCitizen->timeFrame == INFECTION_TIME_IN_DAYS) {
                         theCitizen->status = RECOVERED;
+                        theCity->infected--;
+                    }
                 }
 
                 // if the citizen is cured for 30 days, he can be re-infected again
@@ -215,14 +218,16 @@ void infectCitizensInCity(city *theCity, int toInfect) {
     if (!theCity || toInfect < 0) return;
 
     for (i = 0; i < toInfect; i++) {
-        listIndex = (int) ((double) rand() / RAND_MAX) * theCity->citizens->size;
+        listIndex = (int) ((double) rand() / RAND_MAX) * (theCity->citizens->size - 1);
         maxListIndex = theCity->citizens->array[listIndex]->filledItems;
-        citizenIndex = (int) ((double) rand() / RAND_MAX) * maxListIndex;
+        citizenIndex = (int) ((double) rand() / RAND_MAX) * (maxListIndex - 1);
 
         theCitizen = arrayListGetPointer(theCity->citizens->array[listIndex], citizenIndex);
 
         //already infected citizen
-        if (!theCitizen || theCitizen->status == INFECTED) continue;
+        //todo -infected by se tu nemel vyskytnout, ale radsi to tam ted necham, jinak se to zas zesere
+        if (!theCitizen || theCitizen->status == INFECTED || theCitizen->status == -INFECTED ||
+        theCitizen->status == RECOVERED) continue;
 
         theCitizen->status = INFECTED;
         theCitizen->timeFrame = 0;
@@ -280,7 +285,8 @@ int moveCitizens(country *theCountry, city *theCity, GaussRandom *theGaussRandom
             index = theCountry->distances[index]->id;
 
             //if citizen is infected, counters must be updated
-            if (theCitizen->status == INFECTED) {
+            //todo tady se zase nevyskytne INFECTED, ale zas to tu radsi necham
+            if (theCitizen->status == INFECTED || theCitizen->status == -INFECTED) {
                 theCity->infected--;
                 theCountry->cities[index]->infected++;
             }
@@ -331,7 +337,8 @@ int goBackHome(country *theCountry, double threshold) {
                     if (returnChance < threshold) {
 
                         //if citizen is infected, counters must be updated
-                        if (theCitizen->status == INFECTED) {
+                        //todo zase radsi necham tak jak je, nemeli by tu byt - INFECTED
+                        if (theCitizen->status == INFECTED || theCitizen->status == -INFECTED) {
                             theCity->infected--;
                             theCountry->cities[theCitizen->homeTown]->infected++;
                         }
@@ -615,7 +622,9 @@ int cmpCitiesByDistance(const void *a, const void *b) {
  * @return void* the output returned as an array (always NULL)
  */
 void *start_and_loop(void * args){
-    country *ctry = create_country_from_csv(SIMULATION_INI_CSV);
+//    country *ctry = create_country_from_csv(SIMULATION_INI_CSV);
+    country *ctry = create_country_from_csv("initial.csv");
+
     if(!ctry){
         fprintf(stderr, "Error: Could not create country from ini csv file\n");
         return NULL;
