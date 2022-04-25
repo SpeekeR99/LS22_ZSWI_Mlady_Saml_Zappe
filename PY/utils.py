@@ -22,7 +22,7 @@ def create_and_connect_socket():
         sockfd = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         print("Socket successfully created")
     except socket.error as err:
-        print("socket creation failed with error %s" % err)
+        print("Socket creation failed with error %s" % err)
         return None
 
     try:
@@ -49,12 +49,12 @@ def __sock_send(sockfd, bmsg, single_send=False):
     success = False
     try:
         if sockfd.send(bmsg) == len(bmsg):
-            print(f"'{bmsg.decode()}' message sent")
+            print(f"\tMessage '{bmsg.decode()}' sent")
             success = True
         else:
             print(f"\tMessage '{bmsg.decode()}' not sent")
     except socket.timeout:
-        print("Error: Server timed out.")
+        print("Error: server timed out.")
     except socket.error:
         print("Error: could not write to server.")
     finally:
@@ -126,7 +126,7 @@ if platform.uname()[0] == "Windows":
     SCALE_FACTOR = ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100
 DEFAULT_Z_COEF = 5  # 8
 DEFAULT_RADIUS_COEF = 19.7 - 1.2 * SCALE_FACTOR  # 18.5 (100%) 18.2 (125%)
-FRAME = 0
+frame = 0
 
 
 def __create_data_hash_table(filepath=INIPATH):
@@ -208,9 +208,9 @@ def update_data_csv(csv_data):
 
     if csv_data.startswith("no data"):
         return
-    print("data recieved\n")
-    global FRAME
-    FRAME = FRAME + 1
+    print("Data received\n")
+    global frame
+    frame = frame + 1
     with open(MERGEPATH, "a", encoding="utf8") as fp:
         lines = csv_data.split("\n")
         lines.pop(0)
@@ -242,7 +242,7 @@ def update_img(cur_fig):
     """
     sockfd = create_and_connect_socket()
 
-    socket_send(("send_data " + str(FRAME)).encode(), sockfd)
+    socket_send(("send_data " + str(frame)).encode(), sockfd)
 
     csv_data = bytes()
 
