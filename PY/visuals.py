@@ -10,6 +10,7 @@ if len(sys.argv) == 3:
     set_port(int(sys.argv[2]))
 
 app = DashProxy(
+    name="visuals",
     prevent_initial_callbacks=True,
     transforms=[MultiplexerTransform()],  # More callbacks for one output
     external_stylesheets=[dbc.themes.BOOTSTRAP]  # Bootstrap
