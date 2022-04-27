@@ -622,7 +622,8 @@ int cmpCitiesByDistance(const void *a, const void *b) {
  * @return void* the output returned as an array (always NULL)
  */
 void *start_and_loop(void * args){
-    country *ctry = create_country_from_csv(SIMULATION_INI_CSV);
+//    country *ctry = create_country_from_csv(SIMULATION_INI_CSV);
+    country *ctry = create_country_from_csv("initial.csv");
 
     if(!ctry){
         fprintf(stderr, "Error: Could not create country from ini csv file\n");
