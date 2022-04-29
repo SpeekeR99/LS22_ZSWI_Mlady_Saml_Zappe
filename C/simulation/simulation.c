@@ -5,7 +5,7 @@
 #include <time.h>
 #include "simulation.h"
 #include "random.h"
-#include "csvManager.h"
+#include "fileManager.h"
 
 #ifndef M_PI
 #    define M_PI 3.14159265358979323846
@@ -621,8 +621,22 @@ int cmpCitiesByDistance(const void *a, const void *b) {
  * @param args the arguments passed as an array (not used)
  * @return void* the output returned as an array (always NULL)
  */
-void *start_and_loop(void * args){
-    country *ctry = create_country_from_csv(SIMULATION_INI_CSV);
+void *start_and_loop(void * args) {
+    FILE *fp = NULL;
+    country *ctry = NULL;
+    int date = 0;
+
+    fp = fopen(SAVE_FILEPATH, "rb");
+    if (fp) {
+        ctry = create_country_from_csv(SIMULATION_INI_CSV, 0);
+        date = load_state(ctry);
+        printf("Loaded state from frame %d successfully.", date);
+    }
+    else {
+        ctry = create_country_from_csv(SIMULATION_INI_CSV, 1);
+        printf("Starting the simulation from scratch.");
+    }
+    fclose(fp);
 
     if(!ctry){
         fprintf(stderr, "Error: Could not create country from ini csv file\n");
@@ -635,15 +649,18 @@ void *start_and_loop(void * args){
     char filename[40] = {0};
     clock_t start, end;
 
-    for(int date = 0 ;; date++) {
+    for(;; date++) {
         start = clock();
 
         sprintf(filename, CSV_NAME_FORMAT, date);
         simulate_day(ctry, grand, spreadRandom);
         create_csv_from_country(ctry, filename, date);
-        
+
         end = clock();
-        printf("loop %i done in %f sec\n",date, ((double)(end-start))/CLOCKS_PER_SEC);
+        printf("Loop %i done in %f sec.\n",date, ((double)(end-start))/CLOCKS_PER_SEC);
+
+        save_state(ctry, date);
+        printf("Saved current state successfully.");
     }
 }
 
