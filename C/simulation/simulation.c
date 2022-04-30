@@ -630,7 +630,7 @@ void *start_and_loop(void * args) {
     if (fp) {
         fclose(fp);
         ctry = create_country_from_csv(SIMULATION_INI_CSV, 0);
-        date = load_state(ctry);
+        date = load_state(ctry) + 1;
         printf("Loaded state from frame %d successfully.\n", date);
     }
     else {
