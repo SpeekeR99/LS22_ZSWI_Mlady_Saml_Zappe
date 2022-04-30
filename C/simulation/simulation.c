@@ -628,15 +628,15 @@ void *start_and_loop(void * args) {
 
     fp = fopen(SAVE_FILEPATH, "rb");
     if (fp) {
+        fclose(fp);
         ctry = create_country_from_csv(SIMULATION_INI_CSV, 0);
         date = load_state(ctry);
-        printf("Loaded state from frame %d successfully.", date);
+        printf("Loaded state from frame %d successfully.\n", date);
     }
     else {
         ctry = create_country_from_csv(SIMULATION_INI_CSV, 1);
-        printf("Starting the simulation from scratch.");
+        printf("Starting the simulation from scratch.\n");
     }
-    fclose(fp);
 
     if(!ctry){
         fprintf(stderr, "Error: Could not create country from ini csv file\n");
@@ -660,7 +660,7 @@ void *start_and_loop(void * args) {
         printf("Loop %i done in %f sec.\n",date, ((double)(end-start))/CLOCKS_PER_SEC);
 
         save_state(ctry, date);
-        printf("Saved current state successfully.");
+        printf("Saved current state successfully.\n");
     }
 }
 
