@@ -624,14 +624,17 @@ int cmpCitiesByDistance(const void *a, const void *b) {
 void *start_and_loop(void * args) {
     FILE *fp = NULL;
     country *ctry = NULL;
+    clock_t start, end;
     int date = 0;
 
     fp = fopen(SAVE_FILEPATH, "rb");
     if (fp) {
         fclose(fp);
         ctry = create_country_from_csv(SIMULATION_INI_CSV, 0);
+        start = clock();
         date = load_state(ctry) + 1;
-        printf("Loaded state from frame %d successfully.\n", date);
+        end = clock();
+        printf("Loaded state from frame %d successfully in %f sec.\n", date - 1, ((double)(end-start))/CLOCKS_PER_SEC);
     }
     else {
         ctry = create_country_from_csv(SIMULATION_INI_CSV, 1);
@@ -647,7 +650,6 @@ void *start_and_loop(void * args) {
 
     /* filename: frameXXXX.csv = 13+1 chars = 14 (+1 = null term.) */
     char filename[40] = {0};
-    clock_t start, end;
 
     for(;; date++) {
         start = clock();
