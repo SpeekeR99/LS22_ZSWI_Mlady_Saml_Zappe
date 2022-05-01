@@ -237,7 +237,7 @@ int load_state(country *the_country) {
 
     while(!feof(fp)) {
         the_citizen = calloc(1, sizeof(citizen));
-        size = fread(&buffer, sizeof(the_citizen) + sizeof(int), 1000, fp);
+        size = fread(&buffer, sizeof(the_citizen) + sizeof(city_id), 1000, fp);
 
         for (i = 0; i < size; i += 14) {
             the_citizen->homeTown = buffer[i + 4];
