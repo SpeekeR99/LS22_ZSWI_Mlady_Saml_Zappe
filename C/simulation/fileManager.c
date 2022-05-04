@@ -221,10 +221,12 @@ int save_state(country *the_country, int date) {
  * @return number of loaded frame (date)
  */
 int load_state(country **the_country) {
-    int i, j, date, citizen_id = 0, city_id;
+    int i, j, date, citizen_id = 0, city_id, size_read;
     city *the_city;
     citizen *the_citizen;
     FILE *fp = NULL;
+    int size = 2 * sizeof(int) + 2 * sizeof(char);
+    char buffer[1000 * size];
 
     for (i = 0; i < (*the_country)->numberOfCities; i++) {
         the_city = (*the_country)->cities[i];
@@ -237,21 +239,25 @@ int load_state(country **the_country) {
     fread(&date, sizeof(date), 1, fp);
 
     while (!feof(fp)) {
-        the_citizen = calloc(1, sizeof(citizen));
-        the_citizen->id = citizen_id++;
-        fread(&(the_citizen->homeTown), sizeof(int), 1, fp);
-        fread(&(the_citizen->status), sizeof(char), 1, fp);
-        fread(&(the_citizen->timeFrame), sizeof(char), 1, fp);
-        fread(&(city_id), sizeof(int), 1, fp);
+        size_read = fread(buffer, size, 1000, fp);
 
-        for (j = 0; j < (*the_country)->numberOfCities; j++) {
-            the_city = (*the_country)->cities[j];
+        for (i = 0; i < size_read; i++) {
+            the_citizen = calloc(1, sizeof(citizen));
+            the_citizen->id = citizen_id++;
+            the_citizen->homeTown = *(int *) &buffer[i * size];
+            the_citizen->status = buffer[i * size + sizeof(int)];
+            the_citizen->timeFrame = buffer[i * size + sizeof(int) + sizeof(char)];
+            city_id = *(int *) &buffer[i * size + sizeof(int) + 2 * sizeof(char)];
 
-            if (the_city->city_id == city_id) {
-                hashTableAddElement(the_citizen, the_citizen->id, the_city->citizens);
-                the_city->population++;
-                if (the_citizen->status == INFECTED) the_city->infected++;
-                break;
+            for (j = 0; j < (*the_country)->numberOfCities; j++) {
+                the_city = (*the_country)->cities[j];
+
+                if (the_city->city_id == city_id) {
+                    hashTableAddElement(the_citizen, the_citizen->id, the_city->citizens);
+                    the_city->population++;
+                    if (the_citizen->status == INFECTED) the_city->infected++;
+                    break;
+                }
             }
         }
     }
