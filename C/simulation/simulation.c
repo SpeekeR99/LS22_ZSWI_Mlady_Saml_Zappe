@@ -632,7 +632,7 @@ void *start_and_loop(void * args) {
         fclose(fp);
         ctry = create_country_from_csv(SIMULATION_INI_CSV, 0);
         start = clock();
-        date = load_state(ctry) + 1;
+        date = load_state(&ctry) + 1;
         end = clock();
         printf("Loaded state from frame %d successfully in %f sec.\n", date - 1, ((double)(end-start))/CLOCKS_PER_SEC);
     }

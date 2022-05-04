@@ -201,8 +201,10 @@ int save_state(country *the_country, int date) {
             for (k = 0; k < the_list->filledItems; k++) {
                 the_citizen = arrayListGetPointer(the_list, k);
 
-                fwrite((&the_citizen), sizeof(the_citizen), 1, fp);
-                fwrite(&(the_city->city_id), sizeof(the_city->city_id), 1, fp);
+                fwrite(&(the_citizen->homeTown), sizeof(int), 1, fp);
+                fwrite(&(the_citizen->status), sizeof(char), 1, fp);
+                fwrite(&(the_citizen->timeFrame), sizeof(char), 1, fp);
+                fwrite(&(the_city->city_id), sizeof(int), 1, fp);
             }
         }
     }
@@ -218,15 +220,14 @@ int save_state(country *the_country, int date) {
  * @param the_country basic country without citizens
  * @return number of loaded frame (date)
  */
-int load_state(country *the_country) {
-    int i, date, citizen_id = 0, city_id, size;
+int load_state(country **the_country) {
+    int i, j, date, citizen_id = 0, city_id;
     city *the_city;
     citizen *the_citizen;
     FILE *fp = NULL;
-    char buffer[14*1000]; // 14 bytes needed per citizen (10 for citizen, 4 for city_id)
 
-    for (i = 0; i < the_country->numberOfCities; i++) {
-        the_city = the_country->cities[i];
+    for (i = 0; i < (*the_country)->numberOfCities; i++) {
+        the_city = (*the_country)->cities[i];
         the_city->population = 0;
         the_city->infected = 0;
     }
@@ -235,21 +236,16 @@ int load_state(country *the_country) {
 
     fread(&date, sizeof(date), 1, fp);
 
-    while(!feof(fp)) {
+    while (!feof(fp)) {
         the_citizen = calloc(1, sizeof(citizen));
-        size = fread(&buffer, sizeof(the_citizen) + sizeof(city_id), 1000, fp);
-
-        for (i = 0; i < size; i += 14) {
-            the_citizen->homeTown = buffer[i + 4];
-            the_citizen->status = buffer[i + 8];
-            the_citizen->timeFrame = buffer[i + 9];
-            city_id = buffer[i + 10];
-        }
-
         the_citizen->id = citizen_id++;
+        fread(&(the_citizen->homeTown), sizeof(int), 1, fp);
+        fread(&(the_citizen->status), sizeof(char), 1, fp);
+        fread(&(the_citizen->timeFrame), sizeof(char), 1, fp);
+        fread(&(city_id), sizeof(int), 1, fp);
 
-        for (i = 0; i < the_country->numberOfCities; i++) {
-            the_city = the_country->cities[i];
+        for (j = 0; j < (*the_country)->numberOfCities; j++) {
+            the_city = (*the_country)->cities[j];
 
             if (the_city->city_id == city_id) {
                 hashTableAddElement(the_citizen, the_citizen->id, the_city->citizens);
@@ -257,7 +253,6 @@ int load_state(country *the_country) {
                 if (the_citizen->status == INFECTED) the_city->infected++;
                 break;
             }
-
         }
     }
 

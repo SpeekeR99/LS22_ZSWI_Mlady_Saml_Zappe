@@ -14,6 +14,6 @@
 country *create_country_from_csv(const char *filepath, int create_citizens);
 int create_csv_from_country(country *the_country, const char *filepath, int date);
 int save_state(country *the_country, int date);
-int load_state(country *the_country);
+int load_state(country **the_country);
 
 #endif
