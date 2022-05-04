@@ -3,7 +3,7 @@
 
 #include "simulation.h"
 
-#define SAVE_FILEPATH "./DATA/frames/save.bin"
+#define SAVE_FILEPATH "./DATA/sim_frames/save.bin"
 #define LATITUDE_COLUMN_NAME "latitude"
 #define LONGITUDE_COLUMN_NAME "longitude"
 #define POPULATION_COLUMN_NAME "pocet_obyvatel"
