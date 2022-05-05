@@ -303,7 +303,7 @@ def kill_simulation(kill_input):
     """
     Kills the simulation
     """
-    socket_send(b"start")
+    socket_send(b"out")
 
 
 @app.callback(
