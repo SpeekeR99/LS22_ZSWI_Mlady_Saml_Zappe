@@ -5,7 +5,7 @@
 #include <time.h>
 #include "simulation.h"
 #include "random.h"
-#include "csvManager.h"
+#include "fileManager.h"
 
 #ifndef M_PI
 #    define M_PI 3.14159265358979323846
@@ -77,12 +77,15 @@ void update_citizen_statuses(country *theCountry) {
                     if (death_chance < 0.001) { // todo fiddle around with this magic number
                         hashTableRemoveElement(j, k, theCity->citizens);
                         freeCitizen(&theCitizen);
+                        theCity->infected--;
                         continue;
                     }
 
                     // if the citizen was infected for 14 days, he is cured now
-                    if (theCitizen->timeFrame == INFECTION_TIME_IN_DAYS)
+                    if (theCitizen->timeFrame == INFECTION_TIME_IN_DAYS) {
                         theCitizen->status = RECOVERED;
+                        theCity->infected--;
+                    }
                 }
 
                 // if the citizen is cured for 30 days, he can be re-infected again
@@ -215,14 +218,16 @@ void infectCitizensInCity(city *theCity, int toInfect) {
     if (!theCity || toInfect < 0) return;
 
     for (i = 0; i < toInfect; i++) {
-        listIndex = (int) ((double) rand() / RAND_MAX) * theCity->citizens->size;
+        listIndex = (int) ((double) rand() / RAND_MAX) * (theCity->citizens->size - 1);
         maxListIndex = theCity->citizens->array[listIndex]->filledItems;
-        citizenIndex = (int) ((double) rand() / RAND_MAX) * maxListIndex;
+        citizenIndex = (int) ((double) rand() / RAND_MAX) * (maxListIndex - 1);
 
         theCitizen = arrayListGetPointer(theCity->citizens->array[listIndex], citizenIndex);
 
         //already infected citizen
-        if (!theCitizen || theCitizen->status == INFECTED) continue;
+        //todo -infected by se tu nemel vyskytnout, ale radsi to tam ted necham, jinak se to zas zesere
+        if (!theCitizen || theCitizen->status == INFECTED || theCitizen->status == -INFECTED ||
+        theCitizen->status == RECOVERED) continue;
 
         theCitizen->status = INFECTED;
         theCitizen->timeFrame = 0;
@@ -280,7 +285,8 @@ int moveCitizens(country *theCountry, city *theCity, GaussRandom *theGaussRandom
             index = theCountry->distances[index]->id;
 
             //if citizen is infected, counters must be updated
-            if (theCitizen->status == INFECTED) {
+            //todo tady se zase nevyskytne INFECTED, ale zas to tu radsi necham
+            if (theCitizen->status == INFECTED || theCitizen->status == -INFECTED) {
                 theCity->infected--;
                 theCountry->cities[index]->infected++;
             }
@@ -331,7 +337,8 @@ int goBackHome(country *theCountry, double threshold) {
                     if (returnChance < threshold) {
 
                         //if citizen is infected, counters must be updated
-                        if (theCitizen->status == INFECTED) {
+                        //todo zase radsi necham tak jak je, nemeli by tu byt - INFECTED
+                        if (theCitizen->status == INFECTED || theCitizen->status == -INFECTED) {
                             theCity->infected--;
                             theCountry->cities[theCitizen->homeTown]->infected++;
                         }
@@ -614,8 +621,26 @@ int cmpCitiesByDistance(const void *a, const void *b) {
  * @param args the arguments passed as an array (not used)
  * @return void* the output returned as an array (always NULL)
  */
-void *start_and_loop(void * args){
-    country *ctry = create_country_from_csv(SIMULATION_INI_CSV);
+void *start_and_loop(void * args) {
+    FILE *fp = NULL;
+    country *ctry = NULL;
+    clock_t start, end;
+    int date = 0;
+
+    fp = fopen(SAVE_FILEPATH, "rb");
+    if (fp) {
+        fclose(fp);
+        ctry = create_country_from_csv(SIMULATION_INI_CSV, 0);
+        start = clock();
+        date = load_state(&ctry) + 1;
+        end = clock();
+        printf("Loaded state from frame %d successfully in %f sec.\n", date - 1, ((double)(end-start))/CLOCKS_PER_SEC);
+    }
+    else {
+        ctry = create_country_from_csv(SIMULATION_INI_CSV, 1);
+        printf("Starting the simulation from scratch.\n");
+    }
+
     if(!ctry){
         fprintf(stderr, "Error: Could not create country from ini csv file\n");
         return NULL;
@@ -625,17 +650,19 @@ void *start_and_loop(void * args){
 
     /* filename: frameXXXX.csv = 13+1 chars = 14 (+1 = null term.) */
     char filename[40] = {0};
-    clock_t start, end;
 
-    for(int date = 0 ;; date++) {
+    for(;; date++) {
         start = clock();
 
         sprintf(filename, CSV_NAME_FORMAT, date);
         simulate_day(ctry, grand, spreadRandom);
         create_csv_from_country(ctry, filename, date);
-        
+
         end = clock();
-        printf("loop %i done in %f sec\n",date, ((double)(end-start))/CLOCKS_PER_SEC);
+        printf("Loop %i done in %f sec.\n",date, ((double)(end-start))/CLOCKS_PER_SEC);
+
+        save_state(ctry, date);
+        printf("Saved current state successfully.\n");
     }
 }
 

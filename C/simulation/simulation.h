@@ -9,7 +9,7 @@
 #define INFECTED 2
 #define RECOVERED 3
 #define SIMULATION_INI_CSV "./DATA/initial.csv"
-#define CSV_NAME_FORMAT "./DATA/frames/frame%04d.csv"
+#define CSV_NAME_FORMAT "./DATA/sim_frames/frame%04d.csv"
 #define MEAN    20.0
 #define STDDEV  20.0
 
