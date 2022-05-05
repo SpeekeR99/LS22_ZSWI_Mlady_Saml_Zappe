@@ -95,6 +95,7 @@ def socket_send(bytes_message, sock=None):
         return True
     return False
 
+
 def socket_read(sock):
     """
     Reads message from server
@@ -113,6 +114,7 @@ def socket_read(sock):
         print("Error: could not read from server.")
     return msg
 
+
 def socket_send_and_read(bytes_message):
     """
     Sends message to server and reads response
@@ -128,7 +130,9 @@ def socket_send_and_read(bytes_message):
         return msg
     return None
 
+
 # SETTERS
+
 
 def set_ip(ip):
     """
@@ -150,10 +154,12 @@ def set_port(port: int):
     __port = port
 
 
-# VISULAISATION
+# VISUALIZATION
+
 
 MERGEPATH = "../DATA/merged.csv"
 INIPATH = "../DATA/initial.csv"
+FRAMESPATH = "../DATA/vis_frames/"
 SCALE_FACTOR = 1.25
 if platform.uname()[0] == "Windows":
     SCALE_FACTOR = ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100
@@ -201,7 +207,8 @@ CITY_ID_HASH_TABLE = __create_data_hash_table()
 __initialize_merged_csv()
 
 
-def create_default_figure(filepath=MERGEPATH, z_coef=DEFAULT_Z_COEF, radius_coef=DEFAULT_RADIUS_COEF):
+def create_default_figure(filepath=FRAMESPATH + "frame0000.csv", z_coef=DEFAULT_Z_COEF,
+                          radius_coef=DEFAULT_RADIUS_COEF):
     """
     Creates default figure containing the map from csv data file
     :param filepath: Path to data csv file
@@ -219,7 +226,6 @@ def create_default_figure(filepath=MERGEPATH, z_coef=DEFAULT_Z_COEF, radius_coef
         radius=(df["pocet_nakazenych"] + 1) ** (1.0 / (21 - radius_coef)),  # Roots seem to work better than logarithms
         hover_name="nazev_obce",
         hover_data=["nazev_obce", "kod_obce", "pocet_obyvatel", "pocet_nakazenych"],
-        animation_frame="datum",
         mapbox_style="open-street-map",
         center=dict(lat=49.88537, lon=15.3684),
         zoom=9 - 2.4 * SCALE_FACTOR,  # 6.6 (100%) 6 (125%)
@@ -227,6 +233,20 @@ def create_default_figure(filepath=MERGEPATH, z_coef=DEFAULT_Z_COEF, radius_coef
     )
     fig.update_layout(hoverlabel=dict(bgcolor="white", font_size=16, font_family="Inter"))
     return fig
+
+
+def create_first_frame():
+    with open(INIPATH, "r", encoding="utf8") as fp_ini:
+        with open(FRAMESPATH + "frame0000.csv", "w", encoding="utf8") as fp_frame:
+            header = fp_ini.readline().replace(",vymera", "")
+            fp_frame.write(header)
+            line = fp_ini.readline().split(",")
+            while line and len(line) > 1:
+                line.pop(4)
+                fp_frame.write(
+                    line[0] + "," + line[1] + "," + line[2] + "," + line[3] + "," + line[4] + "," + line[5] + "," +
+                    line[6])
+                line = fp_ini.readline().split(",")
 
 
 def update_data_csv(csv_data):
@@ -238,46 +258,59 @@ def update_data_csv(csv_data):
     :param csv_data: New csv data frame, expected format is the same as the output format from csvManager.c
     :return: no return value
     """
-
     if csv_data.startswith("no data"):
         return
     print("Data received\n")
     global frame
-    frame = frame + 1
+    frame += 1
+    filepath = FRAMESPATH + "frame" + (str(frame).rjust(4, '0')) + ".csv"
     with open(MERGEPATH, "a", encoding="utf8") as fp:
         lines = csv_data.split("\n")
         lines.pop(0)
-        for line in lines:
-            # with open("dbg.log","a") as dbg:
-            #    dbg.write(line)
-            #    dbg.write("\n")
-            if line == "\x04":
-                break
-            line = line.split(",")
-            kod_obce = line[0]
-            pocet_obyvatel = line[1]
-            pocet_nakazenych = line[2]
-            datum = str(int(line[3]) + 1)
-            info = CITY_ID_HASH_TABLE[kod_obce]
-            nazev_obce = info["nazev_obce"]
-            latitude = info["latitude"]
-            longitude = info["longitude"]
-            fp.write("\n" + nazev_obce + "," + kod_obce + "," + latitude + "," + longitude + "," + pocet_obyvatel + ","
-                     + pocet_nakazenych + "," + datum)
+        __write_received2csv(fp, lines)
+    with open(filepath, 'w', encoding="utf8") as fp:
+        lines = csv_data.split("\n")
+        lines.pop(0)
+        with open(INIPATH, "r", encoding="utf8") as fp_ini:
+            header = fp_ini.readline().replace(",vymera", "").replace("\n", "")
+            fp.write(header)
+        __write_received2csv(fp, lines)
 
 
-def update_img(cur_fig):
+def __write_received2csv(fp, lines):
+    """
+    Writes received lines to the csv file
+    :param fp: File pointer to the csv file
+    :param lines: Received lines from server
+    """
+    for line in lines:
+        if "\x04" in line:
+            break
+        line = line.split(",")
+        kod_obce = line[0]
+        pocet_obyvatel = line[1]
+        pocet_nakazenych = line[2]
+        datum = str(int(line[3]) + 1)
+        info = CITY_ID_HASH_TABLE[kod_obce]
+        nazev_obce = info["nazev_obce"]
+        latitude = info["latitude"]
+        longitude = info["longitude"]
+        fp.write("\n" + nazev_obce + "," + kod_obce + "," + latitude + "," + longitude + "," + pocet_obyvatel + ","
+                 + pocet_nakazenych + "," + datum)
+
+
+def update_img(cur_fig, animation_frame):
     """
     Reads data from server, updates the data
     and loads the data into the image
     :param cur_fig: Figure to be updated
+    :param animation_frame: Chosen frame
     :return: figure with new data, same state as cur_fig
     """
-    csv_str = socket_send_and_read( (f"send_data {frame}").encode() ).decode()
-    update_data_csv(csv_str)
+    filepath = "../DATA/vis_frames/frame" + str(animation_frame).rjust(4, '0') + ".csv"
 
-    fig = create_default_figure()
-    fig = remain_figure_state(fig, cur_fig)
+    fig = create_default_figure(filepath=filepath)
+    # fig = remain_figure_state(fig, cur_fig)
     return fig
 
 
@@ -292,20 +325,18 @@ def remain_figure_state(new_fig, old_fig, z_slider_trigger=False, radius_slider_
     :return: Figure that has new dataframe, but old characteristics (such as zoom and animation frame...)
     """
     if old_fig is not None:
-        if "sliders" in old_fig["layout"].keys():
-            new_fig["layout"]["sliders"][0]["active"] = old_fig["layout"]["sliders"][0]["active"]
-        new_fig["data"][0].coloraxis = old_fig["data"][0]["coloraxis"]
-        new_fig["data"][0].customdata = old_fig["data"][0]["customdata"]
-        new_fig["data"][0].hovertemplate = old_fig["data"][0]["hovertemplate"]
-        new_fig["data"][0].hovertext = old_fig["data"][0]["hovertext"]
-        new_fig["data"][0].lat = old_fig["data"][0]["lat"]
-        new_fig["data"][0].lon = old_fig["data"][0]["lon"]
-        new_fig["data"][0].name = old_fig["data"][0]["name"]
+        # new_fig["data"][0].coloraxis = old_fig["data"][0]["coloraxis"]
+        # new_fig["data"][0].customdata = old_fig["data"][0]["customdata"]
+        # new_fig["data"][0].hovertemplate = old_fig["data"][0]["hovertemplate"]
+        # new_fig["data"][0].hovertext = old_fig["data"][0]["hovertext"]
+        # new_fig["data"][0].lat = old_fig["data"][0]["lat"]
+        # new_fig["data"][0].lon = old_fig["data"][0]["lon"]
+        # new_fig["data"][0].name = old_fig["data"][0]["name"]
         if not radius_slider_trigger:  # If the user used the radius slider, don't use the old value
             new_fig["data"][0].radius = old_fig["data"][0]["radius"]
         if not z_slider_trigger:  # If the user used the z slider, don't use the old value
             new_fig["data"][0].z = old_fig["data"][0]["z"]
-        new_fig["data"][0].subplot = old_fig["data"][0]["subplot"]
+        # new_fig["data"][0].subplot = old_fig["data"][0]["subplot"]
         new_fig["layout"]["mapbox"]["center"] = old_fig["layout"]["mapbox"]["center"]
         new_fig["layout"]["mapbox"]["zoom"] = old_fig["layout"]["mapbox"]["zoom"]
     return new_fig

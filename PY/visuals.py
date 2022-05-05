@@ -1,9 +1,10 @@
-from utils import *
+import sys
 from dash import dcc, html
 from dash_extensions.enrich import Input, Output, State, DashProxy, MultiplexerTransform
 import dash_bootstrap_components as dbc
 
-import sys
+from utils import *
+import utils
 
 if len(sys.argv) == 3:
     set_ip(sys.argv[1])
@@ -26,6 +27,18 @@ app.layout = html.Div(  # Main div
                     style={
                         "width": "130vh",
                         "height": "90vh"
+                    }
+                ),
+                dcc.Slider(
+                    id='animation-slider',
+                    min=0,
+                    max=0,
+                    step=1,
+                    value=0,
+                    marks={i: f'{i}' for i in range(0, 1)},
+                    tooltip={
+                        "placement": "bottom",
+                        "always_visible": True
                     }
                 )
             ],
@@ -84,7 +97,8 @@ app.layout = html.Div(  # Main div
                         "margin-top": str(1350 - 800 * SCALE_FACTOR) + "px",
                         "justify-content": "center",
                         "align-items": "center",
-                        "display": "flex"}),
+                        "display": "flex"}
+                ),
             ],
             style={
                 'width': '29%',
@@ -103,23 +117,35 @@ app.layout = html.Div(  # Main div
 
 
 @app.callback(
-    Output("map", "figure"),
-    Input("update-timer", "n_intervals"),
-    State("map", "figure"))
-def update_button(update_input, curr_fig):
+    Output("animation-slider", "max"),
+    Output("animation-slider", "marks"),
+    Input("update-timer", "n_intervals"))
+def download_data(update_input):
     """
     Update button callback, basically ONLY updates the dataframe, retains everything else as it was
     :param update_input: unused input, how many times was the update-timer incremented
-    :param curr_fig: Current state of figure, right before updating
     :return: Figure with updated DataFrame
     """
-    return update_img(curr_fig)
+    csv_str = socket_send_and_read((f"send_data {utils.frame}").encode()).decode()
+    update_data_csv(csv_str)
+
+    marks = {i: f'{i}' for i in range(0, utils.frame + 1)}
+    return utils.frame, marks
+
+
+@app.callback(
+    Output("map", "figure"),
+    Input("animation-slider", "value"),
+    State("map", "figure"))
+def update_figure(chosen_frame, curr_fig):
+    return update_img(curr_fig, chosen_frame)
 
 
 @app.callback(
     Output("map", "figure"),
     Output("z-slider", "value"),
     Output("radius-slider", "value"),
+    Output("animation-slider", "value"),
     Input("reset-button", "n_clicks"))
 def reset_button(reset_input):
     """
@@ -128,7 +154,7 @@ def reset_button(reset_input):
     :param reset_input: unused input, how many times was the reset-button pressed
     :return: Figure in default state
     """
-    return create_default_figure(), DEFAULT_Z_COEF, DEFAULT_RADIUS_COEF
+    return create_default_figure(), DEFAULT_Z_COEF, DEFAULT_RADIUS_COEF, 0
 
 
 @app.callback(
@@ -166,4 +192,5 @@ def radius_slider(radius_coef, curr_fig):
 if __name__ == '__main__':
     if not socket_send(b"start"):
         print("Could not send 'start' to server")
+    create_first_frame()
     app.run_server(debug=True, use_reloader=False)
