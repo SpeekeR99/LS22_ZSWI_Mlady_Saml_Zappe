@@ -265,18 +265,22 @@ def pause_animation(pause_input, timers):
 
 @app.callback(
     Input("animation-timer", "n_intervals"),
+    State("animation-timer", "disabled"),
     State("animation-slider", "value"),
     State("animation-slider", "max"),
     Output("animation-slider", "value"))
-def animate(play_input, curr_frame, max_frame):
+def animate(play_input, disabled, curr_frame, max_frame):
     """
     Animation of the map
     :param play_input: Unused input, seconds passed
+    :param disabled: is the animation disabled?
     :param curr_frame: current frame
     :param max_frame: max frame
     :return: next frame (or current frame if curr frame == max frame)
     """
-    if curr_frame < max_frame:
+    if disabled:
+        return curr_frame
+    elif curr_frame < max_frame:
         return curr_frame + 1
     else:
         return curr_frame
