@@ -1,4 +1,6 @@
 import sys
+import os
+import signal
 from dash import dcc, html
 from dash_extensions.enrich import Input, Output, State, DashProxy, MultiplexerTransform
 import dash_bootstrap_components as dbc
@@ -29,18 +31,59 @@ app.layout = html.Div(  # Main div
                         "height": "90vh"
                     }
                 ),
-                dcc.Slider(
-                    id='animation-slider',
-                    min=0,
-                    max=0,
-                    step=1,
-                    value=0,
-                    marks={i: f'{i}' for i in range(0, 1)},
-                    tooltip={
-                        "placement": "bottom",
-                        "always_visible": True
+                html.Div(
+                    children=[
+                        dbc.Button(
+                            "Play",
+                            id="play-button",
+                            n_clicks=0,
+                            outline=True,
+                            color="success",
+                            size="sm",
+                            style={
+                                "display": "flex",
+                                "padding-right": "18px",
+                            }
+                        ),
+                        dbc.Button(
+                            "Pause",
+                            id="pause-button",
+                            n_clicks=0,
+                            outline=True,
+                            color="danger",
+                            size="sm",
+                            style={
+                                "display": "flex",
+                            }
+                        )
+                    ],
+                    style={
+                        "display": "inline-block",
+                        "width": "10%",
+                        "margin-left": "8vh"
                     }
-                )
+                ),
+                html.Div(
+                    children=[
+                        dcc.Slider(
+                            id='animation-slider',
+                            min=0,
+                            max=0,
+                            step=1,
+                            value=0,
+                            marks={i: f'{i}' for i in range(0, 1)},
+                            tooltip={
+                                "placement": "bottom",
+                                "always_visible": True
+                            }
+                        )
+                    ],
+                    style={
+                        "display": "inline-block",
+                        "width": "72%",
+                        "margin-right": "12vh"
+                    }
+                ),
             ],
             style={
                 'width': '70%',
@@ -85,8 +128,30 @@ app.layout = html.Div(  # Main div
                 html.Div(  # Div with buttons
                     children=[
                         dbc.Button(  # Button that resets the view to default
-                            "Reset",
+                            "Default view",
                             id="reset-button",
+                            n_clicks=0,
+                            outline=True,
+                            color="success",
+                            size="lg",
+                            style={
+                                "margin-right": "50px"
+                            }
+                        ),
+                        dbc.Button(
+                            "Kill Visualization",
+                            id="kill-vis-button",
+                            n_clicks=0,
+                            outline=True,
+                            color="danger",
+                            size="lg",
+                            style={
+                                "margin-right": "10px"
+                            }
+                        ),
+                        dbc.Button(
+                            "Kill Simulation",
+                            id="kill-sim-button",
                             n_clicks=0,
                             outline=True,
                             color="danger",
@@ -97,7 +162,8 @@ app.layout = html.Div(  # Main div
                         "margin-top": str(1350 - 800 * SCALE_FACTOR) + "px",
                         "justify-content": "center",
                         "align-items": "center",
-                        "display": "flex"}
+                        "display": "flex"
+                    }
                 ),
             ],
             style={
@@ -107,10 +173,21 @@ app.layout = html.Div(  # Main div
                 'vertical-align': 'top'
             }
         ),
-        dcc.Interval(  # Timer component for updating data
-            id='update-timer',
-            interval=1 * 10000,  # in milliseconds
-            n_intervals=0
+        html.Div(
+            id="timers",
+            children=[
+                dcc.Interval(  # Timer component for updating data
+                    id='update-timer',
+                    interval=1 * 10000,  # in milliseconds
+                    n_intervals=0
+                ),
+                dcc.Interval(
+                    id="animation-timer",
+                    interval=500,
+                    n_intervals=0,
+                    disabled=True
+                )
+            ]
         )
     ]
 )
@@ -155,6 +232,74 @@ def reset_button(reset_input):
     :return: Figure in default state
     """
     return create_default_figure(), DEFAULT_Z_COEF, DEFAULT_RADIUS_COEF, 0
+
+
+@app.callback(
+    Input("play-button", "n_clicks"),
+    State("timers", "children"),
+    Output("timers", "children"))
+def start_animation(play_input, timers):
+    """
+    Start animation
+    :param play_input: Unused input, how many times was the button pressed
+    :param timers: list of timers
+    :return: new timer component
+    """
+    timers[1]["props"]["disabled"] = False
+    return timers
+
+
+@app.callback(
+    Input("pause-button", "n_clicks"),
+    State("timers", "children"),
+    Output("timers", "children"))
+def pause_animation(pause_input, timers):
+    """
+    Pause animation
+    :param pause_input: Unused input, how many times was the button pressed
+    :param timers: list of timers
+    """
+    timers[1]["props"]["disabled"] = True
+    return timers
+
+
+@app.callback(
+    Input("animation-timer", "n_intervals"),
+    State("animation-slider", "value"),
+    State("animation-slider", "max"),
+    Output("animation-slider", "value"))
+def animate(play_input, curr_frame, max_frame):
+    """
+    Animation of the map
+    :param play_input: Unused input, seconds passed
+    :param curr_frame: current frame
+    :param max_frame: max frame
+    :return: next frame (or current frame if curr frame == max frame)
+    """
+    if curr_frame < max_frame:
+        return curr_frame + 1
+    else:
+        return curr_frame
+
+
+@app.callback(
+    Input("kill-vis-button", "n_clicks"),
+    Output("kill-vis-button", "n_clicks"))
+def kill_visuals(kill_input):
+    """
+    Kills the visualization
+    """
+    os.kill(os.getpid(), signal.SIGTERM)
+
+
+@app.callback(
+    Input("kill-sim-button", "n_clicks"),
+    Output("kill-sim-button", "n_clicks"))
+def kill_simulation(kill_input):
+    """
+    Kills the simulation
+    """
+    socket_send(b"start")
 
 
 @app.callback(

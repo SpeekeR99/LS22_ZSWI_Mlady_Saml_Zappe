@@ -340,17 +340,3 @@ def remain_figure_state(new_fig, old_fig, z_slider_trigger=False, radius_slider_
         new_fig["layout"]["mapbox"]["center"] = old_fig["layout"]["mapbox"]["center"]
         new_fig["layout"]["mapbox"]["zoom"] = old_fig["layout"]["mapbox"]["zoom"]
     return new_fig
-
-def mass_suicide():
-    """
-    kill server and commits sepoku
-    :return: no return value
-    """
-    if socket_send(b"out"):
-        exit(0)
-
-def end_my_life():
-    """
-    ends visualization
-    """
-    exit(0)
