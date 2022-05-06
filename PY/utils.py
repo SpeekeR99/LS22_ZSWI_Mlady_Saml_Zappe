@@ -236,6 +236,9 @@ def create_default_figure(filepath=FRAMESPATH + "frame0000.csv", z_coef=DEFAULT_
 
 
 def create_first_frame():
+    """
+    Creates first frame of the simulation for visualization
+    """
     with open(INIPATH, "r", encoding="utf8") as fp_ini:
         with open(FRAMESPATH + "frame0000.csv", "w", encoding="utf8") as fp_frame:
             header = fp_ini.readline().replace(",vymera", "")
@@ -300,21 +303,26 @@ def __write_received2csv(fp, lines):
 
 
 def update_img(chosen_frame, curr_fig, z_coef=DEFAULT_Z_COEF, radius_coef=DEFAULT_RADIUS_COEF):
+    """
+    Updates the map image with the new data
+    :param chosen_frame: Chosen frame of the animation
+    :param curr_fig: Current figure state
+    :param z_coef: Z maagnitude coefficient
+    :param radius_coef: Radius coefficient
+    :return: Figure with the new data and old zoom and translation
+    """
     filepath = FRAMESPATH + "frame" + str(chosen_frame).rjust(4, '0') + ".csv"
     fig = create_default_figure(filepath=filepath, z_coef=z_coef, radius_coef=radius_coef)
     fig = remain_figure_state(fig, curr_fig)
     return fig
 
 
-def remain_figure_state(new_fig, old_fig, z_slider_trigger=False, radius_slider_trigger=False):
+def remain_figure_state(new_fig, old_fig):
     """
-    Restores user important data, such as where the user is located now and how much has he zoomed
-    Because with every figure update, every information is lost and figure would be reset to default
+    Restores translation and zoom of the old figure to the new one
     :param new_fig: New future figure
     :param old_fig: Current state of the figure before updating
-    :param z_slider_trigger: Z magnitude slider, if user used this, don't update from the old state
-    :param radius_slider_trigger: Radius slider, if user used this, don't update from the old state
-    :return: Figure that has new dataframe, but old characteristics (such as zoom and animation frame...)
+    :return: Figure that has new dataframe, but old translation and zoom
     """
     if old_fig is not None:
         new_fig["layout"]["mapbox"]["center"] = old_fig["layout"]["mapbox"]["center"]

@@ -200,7 +200,7 @@ def download_data(update_input):
     :return: Figure with updated DataFrame
     """
     old_frame = utils.frame
-    csv_str = socket_send_and_read((f"send_data {old_frame}").encode()).decode()
+    csv_str = socket_send_and_read(f"send_data {old_frame}".encode()).decode()
     update_data_csv(csv_str)
 
     new_frame = utils.frame
@@ -220,7 +220,51 @@ def download_data(update_input):
     State("radius-slider", "value"),
     Output("map", "figure"))
 def update_figure(chosen_frame, curr_fig, z_value, radius_value):
+    """
+    Updates the figure with the new dataframe
+    :param chosen_frame: Chosen animation frame
+    :param curr_fig: Current state of the figure
+    :param z_value: Current z-value
+    :param radius_value: Current radius value
+    :return: Figure with updated dataframe
+    """
     return update_img(chosen_frame, curr_fig, z_coef=z_value, radius_coef=radius_value)
+
+
+@app.callback(
+    Input("z-slider", "value"),
+    State("map", "figure"),
+    State("animation-slider", "value"),
+    State("radius-slider", "value"),
+    Output("map", "figure"))
+def z_slider(z_coef, curr_fig, chosen_frame, radius_value):
+    """
+    Z-slider callback, updates the z magnitude coefficient based on the user updated slider
+    :param z_coef: Coefficient of how contrast the colours are
+    :param curr_fig: Current state of figure, right before updating
+    :param chosen_frame: Current frame of the animation
+    :param radius_value: Current radius value
+    :return: Figure with updated z magnitude value
+    """
+    return update_img(chosen_frame, curr_fig, z_coef=z_coef, radius_coef=radius_value)
+
+
+@app.callback(
+    Input("radius-slider", "value"),
+    State("map", "figure"),
+    State("animation-slider", "value"),
+    State("z-slider", "value"),
+    Output("map", "figure"))
+def radius_slider(radius_coef, curr_fig, chosen_frame, z_value):
+    """
+    Radius-slider callback, updates the radius coefficient based on the user updated slider
+    :param radius_coef: Coefficient of how big the dots on the map are
+    :param curr_fig: Current state of figure, right before updating
+    :param chosen_frame: Current frame of the animation
+    :param z_value: Current z magnitude value
+    :return: Figure with updated radius value
+    """
+    return update_img(chosen_frame, curr_fig, z_coef=z_value, radius_coef=radius_coef)
 
 
 @app.callback(
@@ -309,38 +353,6 @@ def kill_simulation(kill_input):
     Kills the simulation
     """
     socket_send(b"out")
-
-
-@app.callback(
-    Input("z-slider", "value"),
-    State("map", "figure"),
-    State("animation-slider", "value"),
-    State("radius-slider", "value"),
-    Output("map", "figure"))
-def z_slider(z_coef, curr_fig, chosen_frame, radius_value):
-    """
-    Z-slider callback, updates the z magnitude coefficient based on the user updated slider
-    :param z_coef: Coefficient of how contrast the colours are
-    :param curr_fig: Current state of figure, right before updating
-    :return: Figure with updated z magnitude value
-    """
-    return update_img(chosen_frame, curr_fig, z_coef=z_coef, radius_coef=radius_value)
-
-
-@app.callback(
-    Input("radius-slider", "value"),
-    State("map", "figure"),
-    State("animation-slider", "value"),
-    State("z-slider", "value"),
-    Output("map", "figure"))
-def radius_slider(radius_coef, curr_fig, chosen_frame, z_value):
-    """
-    Radius-slider callback, updates the radius coefficient based on the user updated slider
-    :param radius_coef: Coefficient of how big the dots on the map are
-    :param curr_fig: Current state of figure, right before updating
-    :return: Figure with updated radius value
-    """
-    return update_img(chosen_frame, curr_fig, z_coef=z_value, radius_coef=radius_coef)
 
 
 if __name__ == '__main__':
