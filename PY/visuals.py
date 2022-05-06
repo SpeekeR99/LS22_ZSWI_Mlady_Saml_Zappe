@@ -100,8 +100,8 @@ app.layout = html.Div(  # Main div
                 ),
                 dcc.Slider(  # Slider for z coefficient
                     id='z-slider',
-                    min=1, max=20, step=.1, value=DEFAULT_Z_COEF,
-                    marks={i: f'{i}' for i in range(1, 21)},
+                    min=1, max=10, step=.1, value=DEFAULT_Z_COEF,
+                    marks={i: f'{i}' for i in range(1, 11)},
                     tooltip={
                         "placement": "bottom",
                         "always_visible": True
@@ -118,8 +118,8 @@ app.layout = html.Div(  # Main div
                 ),
                 dcc.Slider(  # Slider for radius coefficient
                     id='radius-slider',
-                    min=1, max=20, step=.1, value=DEFAULT_RADIUS_COEF,
-                    marks={i: f'{i}' for i in range(1, 21)},
+                    min=1, max=10, step=.1, value=DEFAULT_RADIUS_COEF,
+                    marks={i: f'{i}' for i in range(1, 11)},
                     tooltip={
                         "placement": "bottom",
                         "always_visible": True

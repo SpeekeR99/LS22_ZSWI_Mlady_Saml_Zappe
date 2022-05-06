@@ -164,7 +164,7 @@ SCALE_FACTOR = 1.25
 if platform.uname()[0] == "Windows":
     SCALE_FACTOR = ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100
 DEFAULT_Z_COEF = 5  # 8
-DEFAULT_RADIUS_COEF = 19.7 - 1.2 * SCALE_FACTOR  # 18.5 (100%) 18.2 (125%)
+DEFAULT_RADIUS_COEF = 5.5 - 0.5 * SCALE_FACTOR  # 18.5 (100%) 18.2 (125%)
 frame = 0
 old_total_infected = 0
 total_infected = 0
@@ -233,7 +233,7 @@ def create_default_figure(filepath=FRAMESPATH + "frame0000.csv", z_coef=DEFAULT_
         lat="latitude",
         lon="longitude",
         z=df["pocet_nakazenych"] ** (1.0 / z_coef),  # Roots seem to work better than logarithms
-        radius=(df["pocet_nakazenych"] + 1) ** (1.0 / (21 - radius_coef)),  # Roots seem to work better than logarithms
+        radius=(df["pocet_nakazenych"] + 1) ** (2.5 / (11 - radius_coef)),
         hover_name="nazev_obce",
         hover_data=["nazev_obce", "kod_obce", "pocet_obyvatel", "pocet_nakazenych"],
         mapbox_style="open-street-map",
