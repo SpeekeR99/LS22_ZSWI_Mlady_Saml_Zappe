@@ -116,7 +116,7 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom, GaussRandom
 
     if (!theCountry || !theGaussRandom || !theSpreadRandom) return EXIT_FAILURE;
 
-    memset(theCountry->movedCitizens, 0, theCountry->movedCitizensLength);
+    memset(theCountry->movedCitizens, 0, theCountry->movedCitizensLength * sizeof(char));
     int startIndex = 0;
 
     //go through all cities
