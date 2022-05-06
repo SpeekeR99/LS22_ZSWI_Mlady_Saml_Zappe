@@ -166,6 +166,9 @@ if platform.uname()[0] == "Windows":
 DEFAULT_Z_COEF = 5  # 8
 DEFAULT_RADIUS_COEF = 19.7 - 1.2 * SCALE_FACTOR  # 18.5 (100%) 18.2 (125%)
 frame = 0
+old_total_infected = 0
+total_infected = 0
+new_infected = 0
 
 
 def __create_data_hash_table(filepath=INIPATH):
@@ -217,12 +220,19 @@ def create_default_figure(filepath=FRAMESPATH + "frame0000.csv", z_coef=DEFAULT_
     :return: Default figure with density mapbox
     """
     df = pd.read_csv(filepath)  # Reading the main data here
+
+    global old_total_infected
+    global total_infected
+    global new_infected
+    old_total_infected = total_infected
+    total_infected = df["pocet_nakazenych"].sum()
+    new_infected = total_infected - old_total_infected
+
     fig = px.density_mapbox(  # Creating new figure
         df,
         lat="latitude",
         lon="longitude",
         z=df["pocet_nakazenych"] ** (1.0 / z_coef),  # Roots seem to work better than logarithms
-        #  TODO - the +1 MAY cause some problems when there are no cases in the city
         radius=(df["pocet_nakazenych"] + 1) ** (1.0 / (21 - radius_coef)),  # Roots seem to work better than logarithms
         hover_name="nazev_obce",
         hover_data=["nazev_obce", "kod_obce", "pocet_obyvatel", "pocet_nakazenych"],

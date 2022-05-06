@@ -31,9 +31,9 @@ app.layout = html.Div(  # Main div
                         "height": "90vh"
                     }
                 ),
-                html.Div(
+                html.Div(  # Div with animation buttons
                     children=[
-                        dbc.Button(
+                        dbc.Button(  # Button to start animation
                             "Play",
                             id="play-button",
                             n_clicks=0,
@@ -44,7 +44,7 @@ app.layout = html.Div(  # Main div
                                 "padding-right": "18px",
                             }
                         ),
-                        dbc.Button(
+                        dbc.Button(  # Button to stop animation
                             "Pause",
                             id="pause-button",
                             n_clicks=0,
@@ -61,7 +61,7 @@ app.layout = html.Div(  # Main div
                         "margin-left": "8vh"
                     }
                 ),
-                html.Div(
+                html.Div(  # Div with animation slider
                     children=[
                         dcc.Slider(
                             id='animation-slider',
@@ -94,7 +94,8 @@ app.layout = html.Div(  # Main div
                     "'Z' scale coefficient",
                     style={
                         "text-align": "center",
-                        "margin-bottom": "10px"
+                        "margin-bottom": "10px",
+                        "font-size": "20px"
                     }
                 ),
                 dcc.Slider(  # Slider for z coefficient
@@ -111,7 +112,8 @@ app.layout = html.Div(  # Main div
                     style={
                         "text-align": "center",
                         "margin-bottom": "10px",
-                        "margin-top": "50px"
+                        "margin-top": "50px",
+                        "font-size": "20px"
                     }
                 ),
                 dcc.Slider(  # Slider for radius coefficient
@@ -122,6 +124,26 @@ app.layout = html.Div(  # Main div
                         "placement": "bottom",
                         "always_visible": True
                     }
+                ),
+                html.Div(  # Information texts
+                    children=[
+                        html.Div(  # Number of newly infected poeple
+                            "Newly infected: 1",
+                            id='new-infected-text',
+                            style={
+                                "margin-top": "150px",
+                                "font-size": "30px"
+                            }
+                        ),
+                        html.Div(  # Number of infected people
+                            "Total number of infected: 1",
+                            id='total-infected-text',
+                            style={
+                                "margin-top": "50px",
+                                "font-size": "30px"
+                            }
+                        )
+                    ]
                 ),
                 html.Div(  # Div with buttons
                     children=[
@@ -135,7 +157,7 @@ app.layout = html.Div(  # Main div
                                 "margin-right": "50px"
                             }
                         ),
-                        dbc.Button(
+                        dbc.Button(  # Button that shuts down the visualization app
                             "Kill Visualization",
                             id="kill-vis-button",
                             n_clicks=0,
@@ -145,7 +167,7 @@ app.layout = html.Div(  # Main div
                                 "margin-right": "10px"
                             }
                         ),
-                        dbc.Button(
+                        dbc.Button(  # Button that shuts down the simulation server
                             "Kill Simulation",
                             id="kill-sim-button",
                             n_clicks=0,
@@ -154,10 +176,12 @@ app.layout = html.Div(  # Main div
                         )
                     ],
                     style={
-                        "margin-top": str(1350 - 800 * SCALE_FACTOR) + "px",
+                        "margin-top": str(1100 - 800 * SCALE_FACTOR) + "px",
                         "justify-content": "center",
                         "align-items": "center",
-                        "display": "flex"
+                        "display": "flex",
+                        "flex-direction": "row",
+                        "width": "100%"
                     }
                 ),
             ],
@@ -168,7 +192,7 @@ app.layout = html.Div(  # Main div
                 'vertical-align': 'top'
             }
         ),
-        html.Div(
+        html.Div(  # Timer components
             id="timers",
             children=[
                 dcc.Interval(  # Timer component for updating data
@@ -176,7 +200,7 @@ app.layout = html.Div(  # Main div
                     interval=100,  # in milliseconds
                     n_intervals=0
                 ),
-                dcc.Interval(
+                dcc.Interval(  # Timer component for updating the visualization (animation)
                     id="animation-timer",
                     interval=500,
                     n_intervals=0,
@@ -218,7 +242,9 @@ def download_data(update_input):
     State("map", "figure"),
     State("z-slider", "value"),
     State("radius-slider", "value"),
-    Output("map", "figure"))
+    Output("map", "figure"),
+    Output("total-infected-text", "children"),
+    Output("new-infected-text", "children"))
 def update_figure(chosen_frame, curr_fig, z_value, radius_value):
     """
     Updates the figure with the new dataframe
@@ -228,7 +254,10 @@ def update_figure(chosen_frame, curr_fig, z_value, radius_value):
     :param radius_value: Current radius value
     :return: Figure with updated dataframe
     """
-    return update_img(chosen_frame, curr_fig, z_coef=z_value, radius_coef=radius_value)
+
+    return update_img(chosen_frame, curr_fig, z_coef=z_value, radius_coef=radius_value), \
+           "Total number of infected: " + '{:,}'.format(utils.total_infected).replace(',', ' '), \
+           "Newly infected: " + '{:,}'.format(utils.new_infected).replace(',', ' ')
 
 
 @app.callback(
@@ -359,4 +388,4 @@ if __name__ == '__main__':
     if not socket_send(b"start"):
         print("Could not send 'start' to server")
     create_first_frame()
-    app.run_server(debug=True, use_reloader=False)
+    app.run_server(debug=False, use_reloader=False)
