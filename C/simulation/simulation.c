@@ -3,6 +3,7 @@
 #include <float.h>
 #include <stdio.h>
 #include <time.h>
+#include <string.h>
 #include "simulation.h"
 #include "random.h"
 #include "fileManager.h"
@@ -13,33 +14,32 @@
 
 #define radians(degrees) (degrees) * (M_PI / 180.0)
 //number from <0,1) determines how many citizens will citizen meet
-#define densityToAbsolute 0.03
+#define densityToAbsolute 0.01
 
 #define INFECTION_TIME_IN_DAYS 14
 #define IMMUNITY_AFTER_INFECTION_IN_DAYS 30
 
+#define MOVING_CITIZENS 0.1
 #define SPREAD_MEAN 0.05
 #define SPREAD_STD_DEV 0.02
 
 /**
  * Simulates a day of the simulation (one step is one hour of "real time")
  * Calls simulationStep every hour
- * Every 8 hours goBackHome function is called with threshold of 0.8
- * Other hours the threshold is set to 0.05
- * Calls update_citizen_statuses after each day
+ * Calls updateCitizenStatuses after each day
  *
  * @param theCountry initialized country
  * @param theGaussRandom gaussRandom struct with initialized mean and standard deviation
  * @param theSpreadRandom gaussRandom struct with initialized mean and standard deviation
  */
-void simulate_day(country *theCountry, GaussRandom *theGaussRandom, GaussRandom *theSpreadRandom) {
+void simulateDay(country *theCountry, GaussRandom *theGaussRandom, GaussRandom *theSpreadRandom) {
     int hour;
     for (hour = 0; hour < 24; hour++) {
         simulationStep(theCountry, theGaussRandom, theSpreadRandom);
-        if ((hour + 1) % 8 == 0) goBackHome(theCountry, 0.8);
-        else goBackHome(theCountry, 0.05);
+        if ((hour + 1) % 8 == 0) goBackHome(theCountry, 0.95);
+        else goBackHome(theCountry, 0.1);
     }
-    update_citizen_statuses(theCountry);
+    updateCitizenStatuses(theCountry);
 }
 
 /**
@@ -50,8 +50,8 @@ void simulate_day(country *theCountry, GaussRandom *theGaussRandom, GaussRandom 
  *
  * @param theCountry initialized country
  */
-void update_citizen_statuses(country *theCountry) {
-    double death_chance;
+void updateCitizenStatuses(country *theCountry) {
+    double deathChance;
     int i, j, k;
     city *theCity;
     arrayList *theList;
@@ -67,30 +67,35 @@ void update_citizen_statuses(country *theCountry) {
                 theCitizen = arrayListGetPointer(theList, k);
 
                 // if citizen is either infected or cured, increment days infected (or cured)
-                if (theCitizen->status != NORMAL) theCitizen->timeFrame++;
+                if (theCitizen->status != NORMAL) {
+                    theCitizen->timeFrame++;
 
-                // infected citizen
-                if (theCitizen->status == INFECTED) {
+                    // infected citizen
+                    if (theCitizen->status == INFECTED) {
 
-                    // if the citizen is infected, there is a chance he will die
-                    death_chance = (double) rand() / RAND_MAX;
-                    if (death_chance < 0.001) { // todo fiddle around with this magic number
-                        hashTableRemoveElement(j, k, theCity->citizens);
-                        freeCitizen(&theCitizen);
-                        theCity->infected--;
-                        continue;
+                        // if the citizen is infected, there is a chance he will die
+                        deathChance = (double) rand() / RAND_MAX;
+                        if (deathChance < 0.001) { // todo fiddle around with this magic number
+                            hashTableRemoveElement(j, k, theCity->citizens);
+                            freeCitizen(&theCitizen);
+                            theCity->infected--;
+                            theCity->population--;
+                            continue;
+                        }
+
+                        // if the citizen was infected for 14 days, he is cured now
+                        if (theCitizen->timeFrame == INFECTION_TIME_IN_DAYS) {
+                            theCitizen->status = RECOVERED;
+                            theCity->infected--;
+                            continue;
+                        }
                     }
 
-                    // if the citizen was infected for 14 days, he is cured now
-                    if (theCitizen->timeFrame == INFECTION_TIME_IN_DAYS) {
-                        theCitizen->status = RECOVERED;
-                        theCity->infected--;
+                    // if the citizen is cured for 30 days, he can be re-infected again
+                    if (theCitizen->status == RECOVERED && theCitizen->timeFrame == IMMUNITY_AFTER_INFECTION_IN_DAYS) {
+                        theCitizen->status = NORMAL;
                     }
                 }
-
-                // if the citizen is cured for 30 days, he can be re-infected again
-                if (theCitizen->status == RECOVERED && theCitizen->timeFrame == IMMUNITY_AFTER_INFECTION_IN_DAYS)
-                    theCitizen->status = NORMAL;
             }
         }
     }
@@ -109,55 +114,22 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom, GaussRandom
 
     if (!theCountry || !theGaussRandom || !theSpreadRandom) return EXIT_FAILURE;
 
+    memset(theCountry->movedCitizens, 0, theCountry->movedCitizensLength);
+    int startIndex = 0;
+
     //go through all cities
     for (i = 0; i < theCountry->numberOfCities; i++) {
         theCity = theCountry->cities[i];
         computeDistances(i, theCountry);
         qsort(theCountry->distances, theCountry->numberOfCities, sizeof(cityDistance *), cmpCitiesByDistance);
 
-        moveCitizens(theCountry, theCity, theGaussRandom);
+        startIndex = moveCitizens(theCountry, theCity, theGaussRandom, startIndex);
+        if (startIndex == -1) return EXIT_FAILURE;
     }
-    resetCitizenStatuses(theCountry);
 
     spreadPhenomenon(theCountry, theSpreadRandom);
 
-    //update population of cities to current state
-    for (i = 0; i < theCountry->numberOfCities; i++) {
-        theCountry->cities[i]->population = theCountry->cities[i]->citizens->filledItems;
-    }
-
     return EXIT_SUCCESS;
-}
-
-/**
- * Resets statuses for citizens which have traveled
- * traveling sets status = -status, this function sets
- * their status = -status, so it's the same as before moving
- * @param country
- */
-void resetCitizenStatuses(country *country) {
-    int i;
-    int j;
-    int k;
-    city *theCity;
-    arrayList *theList;
-    citizen *theCitizen;
-    if (!country) return;
-
-    //go through all citizens
-    for (i = 0; i < country->numberOfCities; i++) {
-        theCity = country->cities[i];
-
-        for (j = 0; j < theCity->citizens->size; j++) {
-            theList = theCity->citizens->array[j];
-
-            for (k = 0; k < theList->filledItems; k++) {
-                theCitizen = arrayListGetPointer(theList, k);
-                if (theCitizen->status < 0) theCitizen->status = -theCitizen->status;
-            }
-        }
-    }
-
 }
 
 /**
@@ -224,10 +196,8 @@ void infectCitizensInCity(city *theCity, int toInfect) {
 
         theCitizen = arrayListGetPointer(theCity->citizens->array[listIndex], citizenIndex);
 
-        //already infected citizen
-        //todo -infected by se tu nemel vyskytnout, ale radsi to tam ted necham, jinak se to zas zesere
-        if (!theCitizen || theCitizen->status == INFECTED || theCitizen->status == -INFECTED ||
-        theCitizen->status == RECOVERED) continue;
+        //already infected or cured citizen
+        if (!theCitizen || theCitizen->status > 1) continue;
 
         theCitizen->status = INFECTED;
         theCitizen->timeFrame = 0;
@@ -236,17 +206,19 @@ void infectCitizensInCity(city *theCity, int toInfect) {
 }
 
 /**
- * Function preforms moving of 50% of citizens in the country, citizents travel from some city
- * to another randomly selected city
+ * Function preforms moving some percentage (defined by MOVING_CITIZENS of citizens in the country,
+ * citizens travel from some city to another randomly selected city
  *
  * @param theCountry initialized country
  * @param theCity current city
  * @param theGaussRandom gaussRandom struct with initialized mean and standard deviation
+ * @param startIndex index at which should moving start at, it is there because of parameterized
+ *                   looping through citizens
 
- * @return EXIT_SUCCESS or EXIT_FAILURE in case of invalid parameters or if it is not possible
+ * @return startIndex for next city or -1 in case of invalid parameters or if it is not possible
  *         to allocate memory
  */
-int moveCitizens(country *theCountry, city *theCity, GaussRandom *theGaussRandom) {
+int moveCitizens(country *theCountry, city *theCity, GaussRandom *theGaussRandom, int startIndex) {
     int j;
     int k;
     int index;
@@ -254,39 +226,41 @@ int moveCitizens(country *theCountry, city *theCity, GaussRandom *theGaussRandom
     arrayList *theList;
     citizen *theCitizen;
 
-    if (!theCountry || !theCity || !theGaussRandom) return EXIT_FAILURE;
+    if (!theCountry || !theCity || !theGaussRandom) return -1;
 
     doublePointer = malloc(sizeof(double));
-    if (!doublePointer) return EXIT_FAILURE;
+    if (!doublePointer) return -1;
+
+    int moving = (int) (1.0 / MOVING_CITIZENS);
+    k = startIndex;
 
     //go through all citizens in a city
     for (j = 0; j < theCity->citizens->size; j++) {
         theList = theCity->citizens->array[j];
 
-        //todo takes just 50% of citizens
-        for (k = 0; k < theList->filledItems; k += 2) {
+        for (; k < theList->filledItems; k += moving) {
+
             theCitizen = (citizen *) arrayListGetPointer(theList, k);
 
             //citizen has moved already
-            if (theCitizen->status < 0) continue;
+            if (theCountry->movedCitizens[theCitizen->id] == 1) continue;
 
             //this citizen will be moved, flag which notifies about that
-            theCitizen->status = -theCitizen->status;
+            theCountry->movedCitizens[theCitizen->id] = 1;
 
             //maybe we could delete this, what can possibly happen :)
             if (nextNormalDistDouble(theGaussRandom, doublePointer) == EXIT_FAILURE) {
                 free(doublePointer);
-                return EXIT_FAILURE;
+                return -1;
             }
 
             //finds city which is the closest (not really) to the distance which citizen should travel
-            index = interpolationSearch(*doublePointer, theCountry->numberOfCities, theCountry->distances);
+            index = interpolationSearch(ABS(*doublePointer), theCountry->numberOfCities, theCountry->distances);
             //todo
             index = theCountry->distances[index]->id;
 
             //if citizen is infected, counters must be updated
-            //todo tady se zase nevyskytne INFECTED, ale zas to tu radsi necham
-            if (theCitizen->status == INFECTED || theCitizen->status == -INFECTED) {
+            if (theCitizen->status == INFECTED) {
                 theCity->infected--;
                 theCountry->cities[index]->infected++;
             }
@@ -294,11 +268,17 @@ int moveCitizens(country *theCountry, city *theCity, GaussRandom *theGaussRandom
             //move the citizen from one city to another
             hashTableRemoveElement(j, k, theCity->citizens);
             hashTableAddElement(theCitizen, theCitizen->id, theCountry->cities[index]->citizens);
+            theCity->population--;
+            theCountry->cities[index]->population++;
+            //one citizen was removed, we need to decrement k, because otherwise
+            // we will skip one item in arrayList
+            k--;
         }
+        k -= theList->filledItems;
     }
 
     free(doublePointer);
-    return EXIT_SUCCESS;
+    return k;
 }
 
 /**
@@ -334,11 +314,10 @@ int goBackHome(country *theCountry, double threshold) {
 
                     //value from <0,1) if smaller than threshold, citizen moves to his hometown
                     returnChance = (double) rand() / RAND_MAX;
-                    if (returnChance < threshold) {
+                    if (returnChance <= threshold) {
 
                         //if citizen is infected, counters must be updated
-                        //todo zase radsi necham tak jak je, nemeli by tu byt - INFECTED
-                        if (theCitizen->status == INFECTED || theCitizen->status == -INFECTED) {
+                        if (theCitizen->status == INFECTED) {
                             theCity->infected--;
                             theCountry->cities[theCitizen->homeTown]->infected++;
                         }
@@ -346,7 +325,11 @@ int goBackHome(country *theCountry, double threshold) {
                         //move the citizen from actual city to his hometown
                         hashTableRemoveElement(j, k, theCity->citizens);
                         hashTableAddElement(theCitizen, theCitizen->id, theCountry->cities[theCitizen->homeTown]->citizens);
-
+                        theCity->population--;
+                        theCountry->cities[theCitizen->homeTown]->population++;
+                        //one citizen was removed, we need to decrement k, because otherwise
+                        // we will skip one item in arrayList
+                        k--;
                     }
                 }
             }
@@ -373,14 +356,14 @@ void computeDistances(int cityIndex, country *theCountry) {
 
     //all cities before city at cityIndex
     for (i = 0; i < cityIndex; i++) {
-        distance = compute_distance(theCity, theCountry->cities[i]);
+        distance = computeDistance(theCity, theCountry->cities[i]);
         theCountry->distances[i]->distance = distance;
         theCountry->distances[i]->id = i;
     }
 
     //all cities after city at cityIndex
     for (i = cityIndex + 1; i < theCountry->numberOfCities; i++) {
-        distance = compute_distance(theCity, theCountry->cities[i]);
+        distance = computeDistance(theCity, theCountry->cities[i]);
         theCountry->distances[i]->distance = distance;
         theCountry->distances[i]->id = i;
     }
@@ -429,7 +412,7 @@ country *createCountry(int numberOfCities) {
  * @return pointer to city struct or NULL if parameters are invalid or it is
  *         not possible to allocate memory
  */
-city *createCity(int city_id, int area, int population, int infected, double lat, double lon) {
+city *createCity(int city_id, double area, int population, int infected, double lat, double lon) {
     city *theCity;
     if (population <= 0) return NULL;
     theCity = calloc(1, sizeof(city));
@@ -487,6 +470,7 @@ void freeCountry(country **theCountry) {
 
     free((*theCountry)->cities);
     free((*theCountry)->distances);
+    free((*theCountry)->movedCitizens);
     free(*theCountry);
     *theCountry = NULL;
 }
@@ -574,7 +558,7 @@ int interpolationSearch(double distance, int citiesSize, cityDistance **cityDist
  * @param secondCity not null
  * @return distance from first city to second city in kilometers
  */
-double compute_distance(city *firstCity, city *secondCity) {
+double computeDistance(city *firstCity, city *secondCity) {
     double coef = 110.25;
     double x = secondCity->lat - firstCity->lat;
     double y = (secondCity->lon - firstCity->lon) * cos(radians(firstCity->lat));
@@ -640,6 +624,7 @@ void *start_and_loop(void * args) {
         ctry = create_country_from_csv(SIMULATION_INI_CSV, 1);
         printf("Starting the simulation from scratch.\n");
     }
+    srand(time(NULL));
 
     if(!ctry){
         fprintf(stderr, "Error: Could not create country from ini csv file\n");
@@ -655,7 +640,7 @@ void *start_and_loop(void * args) {
         start = clock();
 
         sprintf(filename, CSV_NAME_FORMAT, date);
-        simulate_day(ctry, grand, spreadRandom);
+        simulateDay(ctry, grand, spreadRandom);
         create_csv_from_country(ctry, filename, date);
 
         end = clock();
