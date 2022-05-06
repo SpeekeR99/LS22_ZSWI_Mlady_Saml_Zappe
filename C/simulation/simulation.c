@@ -87,6 +87,7 @@ void updateCitizenStatuses(country *theCountry) {
                         if (theCitizen->timeFrame == INFECTION_TIME_IN_DAYS) {
                             theCitizen->status = RECOVERED;
                             theCity->infected--;
+                            theCitizen->timeFrame = 0;
                             continue;
                         }
                     }
@@ -94,6 +95,7 @@ void updateCitizenStatuses(country *theCountry) {
                     // if the citizen is cured for 30 days, he can be re-infected again
                     if (theCitizen->status == RECOVERED && theCitizen->timeFrame == IMMUNITY_AFTER_INFECTION_IN_DAYS) {
                         theCitizen->status = NORMAL;
+                        theCitizen->timeFrame = 0;
                     }
                 }
             }
