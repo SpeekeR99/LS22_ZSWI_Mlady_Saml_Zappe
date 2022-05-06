@@ -299,18 +299,10 @@ def __write_received2csv(fp, lines):
                  + pocet_nakazenych + "," + datum)
 
 
-def update_img(cur_fig, animation_frame):
-    """
-    Reads data from server, updates the data
-    and loads the data into the image
-    :param cur_fig: Figure to be updated
-    :param animation_frame: Chosen frame
-    :return: figure with new data, same state as cur_fig
-    """
-    filepath = "../DATA/vis_frames/frame" + str(animation_frame).rjust(4, '0') + ".csv"
-
-    fig = create_default_figure(filepath=filepath)
-    # fig = remain_figure_state(fig, cur_fig)
+def update_img(chosen_frame, curr_fig, z_coef=DEFAULT_Z_COEF, radius_coef=DEFAULT_RADIUS_COEF):
+    filepath = FRAMESPATH + "frame" + str(chosen_frame).rjust(4, '0') + ".csv"
+    fig = create_default_figure(filepath=filepath, z_coef=z_coef, radius_coef=radius_coef)
+    fig = remain_figure_state(fig, curr_fig)
     return fig
 
 
@@ -325,18 +317,6 @@ def remain_figure_state(new_fig, old_fig, z_slider_trigger=False, radius_slider_
     :return: Figure that has new dataframe, but old characteristics (such as zoom and animation frame...)
     """
     if old_fig is not None:
-        # new_fig["data"][0].coloraxis = old_fig["data"][0]["coloraxis"]
-        # new_fig["data"][0].customdata = old_fig["data"][0]["customdata"]
-        # new_fig["data"][0].hovertemplate = old_fig["data"][0]["hovertemplate"]
-        # new_fig["data"][0].hovertext = old_fig["data"][0]["hovertext"]
-        # new_fig["data"][0].lat = old_fig["data"][0]["lat"]
-        # new_fig["data"][0].lon = old_fig["data"][0]["lon"]
-        # new_fig["data"][0].name = old_fig["data"][0]["name"]
-        if not radius_slider_trigger:  # If the user used the radius slider, don't use the old value
-            new_fig["data"][0].radius = old_fig["data"][0]["radius"]
-        if not z_slider_trigger:  # If the user used the z slider, don't use the old value
-            new_fig["data"][0].z = old_fig["data"][0]["z"]
-        # new_fig["data"][0].subplot = old_fig["data"][0]["subplot"]
         new_fig["layout"]["mapbox"]["center"] = old_fig["layout"]["mapbox"]["center"]
         new_fig["layout"]["mapbox"]["zoom"] = old_fig["layout"]["mapbox"]["zoom"]
     return new_fig

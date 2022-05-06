@@ -37,7 +37,6 @@ app.layout = html.Div(  # Main div
                             "Play",
                             id="play-button",
                             n_clicks=0,
-                            outline=True,
                             color="success",
                             size="sm",
                             style={
@@ -49,7 +48,6 @@ app.layout = html.Div(  # Main div
                             "Pause",
                             id="pause-button",
                             n_clicks=0,
-                            outline=True,
                             color="danger",
                             size="sm",
                             style={
@@ -131,8 +129,7 @@ app.layout = html.Div(  # Main div
                             "Default view",
                             id="reset-button",
                             n_clicks=0,
-                            outline=True,
-                            color="success",
+                            color="info",
                             size="lg",
                             style={
                                 "margin-right": "50px"
@@ -142,9 +139,8 @@ app.layout = html.Div(  # Main div
                             "Kill Visualization",
                             id="kill-vis-button",
                             n_clicks=0,
-                            outline=True,
                             color="danger",
-                            size="lg",
+                            size="md",
                             style={
                                 "margin-right": "10px"
                             }
@@ -153,9 +149,8 @@ app.layout = html.Div(  # Main div
                             "Kill Simulation",
                             id="kill-sim-button",
                             n_clicks=0,
-                            outline=True,
                             color="danger",
-                            size="lg"
+                            size="md"
                         )
                     ],
                     style={
@@ -178,7 +173,7 @@ app.layout = html.Div(  # Main div
             children=[
                 dcc.Interval(  # Timer component for updating data
                     id='update-timer',
-                    interval=1 * 10000,  # in milliseconds
+                    interval=100,  # in milliseconds
                     n_intervals=0
                 ),
                 dcc.Interval(
@@ -194,28 +189,38 @@ app.layout = html.Div(  # Main div
 
 
 @app.callback(
+    Input("update-timer", "n_intervals"),
     Output("animation-slider", "max"),
     Output("animation-slider", "marks"),
-    Input("update-timer", "n_intervals"))
+    Output("update-timer", "interval"))
 def download_data(update_input):
     """
     Update button callback, basically ONLY updates the dataframe, retains everything else as it was
     :param update_input: unused input, how many times was the update-timer incremented
     :return: Figure with updated DataFrame
     """
-    csv_str = socket_send_and_read((f"send_data {utils.frame}").encode()).decode()
+    old_frame = utils.frame
+    csv_str = socket_send_and_read((f"send_data {old_frame}").encode()).decode()
     update_data_csv(csv_str)
 
-    marks = {i: f'{i}' for i in range(0, utils.frame + 1)}
-    return utils.frame, marks
+    new_frame = utils.frame
+    marks = {i: f'{i}' for i in range(0, new_frame + 1, (10 * int(new_frame / 50)) if new_frame >= 50 else 1)}
+    marks[new_frame] = f'{new_frame}'
+
+    if old_frame == new_frame:
+        return new_frame, marks, 10000
+    else:
+        return new_frame, marks, 100
 
 
 @app.callback(
-    Output("map", "figure"),
     Input("animation-slider", "value"),
-    State("map", "figure"))
-def update_figure(chosen_frame, curr_fig):
-    return update_img(curr_fig, chosen_frame)
+    State("map", "figure"),
+    State("z-slider", "value"),
+    State("radius-slider", "value"),
+    Output("map", "figure"))
+def update_figure(chosen_frame, curr_fig, z_value, radius_value):
+    return update_img(chosen_frame, curr_fig, z_coef=z_value, radius_coef=radius_value)
 
 
 @app.callback(
@@ -307,35 +312,35 @@ def kill_simulation(kill_input):
 
 
 @app.callback(
-    Output("map", "figure"),
     Input("z-slider", "value"),
-    State("map", "figure"))
-def z_slider(z_coef, curr_fig):
+    State("map", "figure"),
+    State("animation-slider", "value"),
+    State("radius-slider", "value"),
+    Output("map", "figure"))
+def z_slider(z_coef, curr_fig, chosen_frame, radius_value):
     """
     Z-slider callback, updates the z magnitude coefficient based on the user updated slider
     :param z_coef: Coefficient of how contrast the colours are
     :param curr_fig: Current state of figure, right before updating
     :return: Figure with updated z magnitude value
     """
-    fig = create_default_figure(z_coef=z_coef)
-    fig = remain_figure_state(fig, curr_fig, z_slider_trigger=True)
-    return fig
+    return update_img(chosen_frame, curr_fig, z_coef=z_coef, radius_coef=radius_value)
 
 
 @app.callback(
-    Output("map", "figure"),
     Input("radius-slider", "value"),
-    State("map", "figure"))
-def radius_slider(radius_coef, curr_fig):
+    State("map", "figure"),
+    State("animation-slider", "value"),
+    State("z-slider", "value"),
+    Output("map", "figure"))
+def radius_slider(radius_coef, curr_fig, chosen_frame, z_value):
     """
     Radius-slider callback, updates the radius coefficient based on the user updated slider
     :param radius_coef: Coefficient of how big the dots on the map are
     :param curr_fig: Current state of figure, right before updating
     :return: Figure with updated radius value
     """
-    fig = create_default_figure(radius_coef=radius_coef)
-    fig = remain_figure_state(fig, curr_fig, radius_slider_trigger=True)
-    return fig
+    return update_img(chosen_frame, curr_fig, z_coef=z_value, radius_coef=radius_coef)
 
 
 if __name__ == '__main__':
