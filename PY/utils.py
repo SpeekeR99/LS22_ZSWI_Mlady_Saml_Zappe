@@ -95,6 +95,7 @@ def socket_send(bytes_message, sock=None):
         return True
     return False
 
+
 def socket_read(sock):
     """
     Reads message from server
@@ -113,6 +114,7 @@ def socket_read(sock):
         print("Error: could not read from server.")
     return msg
 
+
 def socket_send_and_read(bytes_message):
     """
     Sends message to server and reads response
@@ -128,7 +130,9 @@ def socket_send_and_read(bytes_message):
         return msg
     return None
 
+
 # SETTERS
+
 
 def set_ip(ip):
     """
@@ -150,16 +154,21 @@ def set_port(port: int):
     __port = port
 
 
-# VISULAISATION
+# VISUALIZATION
+
 
 MERGEPATH = "../DATA/merged.csv"
 INIPATH = "../DATA/initial.csv"
+FRAMESPATH = "../DATA/vis_frames/"
 SCALE_FACTOR = 1.25
 if platform.uname()[0] == "Windows":
     SCALE_FACTOR = ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100
 DEFAULT_Z_COEF = 5  # 8
-DEFAULT_RADIUS_COEF = 19.7 - 1.2 * SCALE_FACTOR  # 18.5 (100%) 18.2 (125%)
+DEFAULT_RADIUS_COEF = 5.5 - 0.5 * SCALE_FACTOR  # 18.5 (100%) 18.2 (125%)
 frame = 0
+old_total_infected = 0
+total_infected = 0
+new_infected = 0
 
 
 def __create_data_hash_table(filepath=INIPATH):
@@ -201,7 +210,8 @@ CITY_ID_HASH_TABLE = __create_data_hash_table()
 __initialize_merged_csv()
 
 
-def create_default_figure(filepath=MERGEPATH, z_coef=DEFAULT_Z_COEF, radius_coef=DEFAULT_RADIUS_COEF):
+def create_default_figure(filepath=FRAMESPATH + "frame0000.csv", z_coef=DEFAULT_Z_COEF,
+                          radius_coef=DEFAULT_RADIUS_COEF):
     """
     Creates default figure containing the map from csv data file
     :param filepath: Path to data csv file
@@ -210,16 +220,22 @@ def create_default_figure(filepath=MERGEPATH, z_coef=DEFAULT_Z_COEF, radius_coef
     :return: Default figure with density mapbox
     """
     df = pd.read_csv(filepath)  # Reading the main data here
+
+    global old_total_infected
+    global total_infected
+    global new_infected
+    old_total_infected = total_infected
+    total_infected = df["pocet_nakazenych"].sum()
+    new_infected = total_infected - old_total_infected
+
     fig = px.density_mapbox(  # Creating new figure
         df,
         lat="latitude",
         lon="longitude",
         z=df["pocet_nakazenych"] ** (1.0 / z_coef),  # Roots seem to work better than logarithms
-        #  TODO - the +1 MAY cause some problems when there are no cases in the city
-        radius=(df["pocet_nakazenych"] + 1) ** (1.0 / (21 - radius_coef)),  # Roots seem to work better than logarithms
+        radius=(df["pocet_nakazenych"] + 1) ** (2.5 / (11 - radius_coef)),
         hover_name="nazev_obce",
         hover_data=["nazev_obce", "kod_obce", "pocet_obyvatel", "pocet_nakazenych"],
-        animation_frame="datum",
         mapbox_style="open-street-map",
         center=dict(lat=49.88537, lon=15.3684),
         zoom=9 - 2.4 * SCALE_FACTOR,  # 6.6 (100%) 6 (125%)
@@ -227,6 +243,23 @@ def create_default_figure(filepath=MERGEPATH, z_coef=DEFAULT_Z_COEF, radius_coef
     )
     fig.update_layout(hoverlabel=dict(bgcolor="white", font_size=16, font_family="Inter"))
     return fig
+
+
+def create_first_frame():
+    """
+    Creates first frame of the simulation for visualization
+    """
+    with open(INIPATH, "r", encoding="utf8") as fp_ini:
+        with open(FRAMESPATH + "frame0000.csv", "w", encoding="utf8") as fp_frame:
+            header = fp_ini.readline().replace(",vymera", "")
+            fp_frame.write(header)
+            line = fp_ini.readline().split(",")
+            while line and len(line) > 1:
+                line.pop(4)
+                fp_frame.write(
+                    line[0] + "," + line[1] + "," + line[2] + "," + line[3] + "," + line[4] + "," + line[5] + "," +
+                    line[6])
+                line = fp_ini.readline().split(",")
 
 
 def update_data_csv(csv_data):
@@ -238,88 +271,70 @@ def update_data_csv(csv_data):
     :param csv_data: New csv data frame, expected format is the same as the output format from csvManager.c
     :return: no return value
     """
-
     if csv_data.startswith("no data"):
         return
     print("Data received\n")
     global frame
-    frame = frame + 1
+    frame += 1
+    filepath = FRAMESPATH + "frame" + (str(frame).rjust(4, '0')) + ".csv"
     with open(MERGEPATH, "a", encoding="utf8") as fp:
         lines = csv_data.split("\n")
         lines.pop(0)
-        for line in lines:
-            # with open("dbg.log","a") as dbg:
-            #    dbg.write(line)
-            #    dbg.write("\n")
-            if line == "\x04":
-                break
-            line = line.split(",")
-            kod_obce = line[0]
-            pocet_obyvatel = line[1]
-            pocet_nakazenych = line[2]
-            datum = str(int(line[3]) + 1)
-            info = CITY_ID_HASH_TABLE[kod_obce]
-            nazev_obce = info["nazev_obce"]
-            latitude = info["latitude"]
-            longitude = info["longitude"]
-            fp.write("\n" + nazev_obce + "," + kod_obce + "," + latitude + "," + longitude + "," + pocet_obyvatel + ","
-                     + pocet_nakazenych + "," + datum)
+        __write_received2csv(fp, lines)
+    with open(filepath, 'w', encoding="utf8") as fp:
+        lines = csv_data.split("\n")
+        lines.pop(0)
+        with open(INIPATH, "r", encoding="utf8") as fp_ini:
+            header = fp_ini.readline().replace(",vymera", "").replace("\n", "")
+            fp.write(header)
+        __write_received2csv(fp, lines)
 
 
-def update_img(cur_fig):
+def __write_received2csv(fp, lines):
     """
-    Reads data from server, updates the data
-    and loads the data into the image
-    :param cur_fig: Figure to be updated
-    :return: figure with new data, same state as cur_fig
+    Writes received lines to the csv file
+    :param fp: File pointer to the csv file
+    :param lines: Received lines from server
     """
-    csv_str = socket_send_and_read( (f"send_data {frame}").encode() ).decode()
-    update_data_csv(csv_str)
+    for line in lines:
+        if "\x04" in line:
+            break
+        line = line.split(",")
+        kod_obce = line[0]
+        pocet_obyvatel = line[1]
+        pocet_nakazenych = line[2]
+        datum = str(int(line[3]) + 1)
+        info = CITY_ID_HASH_TABLE[kod_obce]
+        nazev_obce = info["nazev_obce"]
+        latitude = info["latitude"]
+        longitude = info["longitude"]
+        fp.write("\n" + nazev_obce + "," + kod_obce + "," + latitude + "," + longitude + "," + pocet_obyvatel + ","
+                 + pocet_nakazenych + "," + datum)
 
-    fig = create_default_figure()
-    fig = remain_figure_state(fig, cur_fig)
+
+def update_img(chosen_frame, curr_fig, z_coef=DEFAULT_Z_COEF, radius_coef=DEFAULT_RADIUS_COEF):
+    """
+    Updates the map image with the new data
+    :param chosen_frame: Chosen frame of the animation
+    :param curr_fig: Current figure state
+    :param z_coef: Z maagnitude coefficient
+    :param radius_coef: Radius coefficient
+    :return: Figure with the new data and old zoom and translation
+    """
+    filepath = FRAMESPATH + "frame" + str(chosen_frame).rjust(4, '0') + ".csv"
+    fig = create_default_figure(filepath=filepath, z_coef=z_coef, radius_coef=radius_coef)
+    fig = remain_figure_state(fig, curr_fig)
     return fig
 
 
-def remain_figure_state(new_fig, old_fig, z_slider_trigger=False, radius_slider_trigger=False):
+def remain_figure_state(new_fig, old_fig):
     """
-    Restores user important data, such as where the user is located now and how much has he zoomed
-    Because with every figure update, every information is lost and figure would be reset to default
+    Restores translation and zoom of the old figure to the new one
     :param new_fig: New future figure
     :param old_fig: Current state of the figure before updating
-    :param z_slider_trigger: Z magnitude slider, if user used this, don't update from the old state
-    :param radius_slider_trigger: Radius slider, if user used this, don't update from the old state
-    :return: Figure that has new dataframe, but old characteristics (such as zoom and animation frame...)
+    :return: Figure that has new dataframe, but old translation and zoom
     """
     if old_fig is not None:
-        if "sliders" in old_fig["layout"].keys():
-            new_fig["layout"]["sliders"][0]["active"] = old_fig["layout"]["sliders"][0]["active"]
-        new_fig["data"][0].coloraxis = old_fig["data"][0]["coloraxis"]
-        new_fig["data"][0].customdata = old_fig["data"][0]["customdata"]
-        new_fig["data"][0].hovertemplate = old_fig["data"][0]["hovertemplate"]
-        new_fig["data"][0].hovertext = old_fig["data"][0]["hovertext"]
-        new_fig["data"][0].lat = old_fig["data"][0]["lat"]
-        new_fig["data"][0].lon = old_fig["data"][0]["lon"]
-        new_fig["data"][0].name = old_fig["data"][0]["name"]
-        if not radius_slider_trigger:  # If the user used the radius slider, don't use the old value
-            new_fig["data"][0].radius = old_fig["data"][0]["radius"]
-        if not z_slider_trigger:  # If the user used the z slider, don't use the old value
-            new_fig["data"][0].z = old_fig["data"][0]["z"]
-        new_fig["data"][0].subplot = old_fig["data"][0]["subplot"]
         new_fig["layout"]["mapbox"]["center"] = old_fig["layout"]["mapbox"]["center"]
         new_fig["layout"]["mapbox"]["zoom"] = old_fig["layout"]["mapbox"]["zoom"]
     return new_fig
-
-def mass_suicide():
-    """
-    kill server and commits sepoku
-    :return: no return value
-    """
-    if socket_send(b"out"):
-        exit(0)
-
-def end_my_life():
-    """
-    ends visualization
-    """
-    exit(0)
