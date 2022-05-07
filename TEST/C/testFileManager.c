@@ -4,23 +4,23 @@
 void setUp(void) {}
 
 void test_create_country_from_csv_should_create(void) {
-    country *c = create_country_from_csv("../../DATA/initial.csv");
+    country *c = create_country_from_csv("../../DATA/initial.csv", 1);
     TEST_ASSERT_NOT_NULL(c);
     freeCountry(&c);
 }
 
 void test_create_country_from_csv_should_not_create_1(void) {
-    country *c = create_country_from_csv("non-existant.csv");
+    country *c = create_country_from_csv("non-existant.csv", 1);
     TEST_ASSERT_NULL(c);
 }
 
 void test_create_country_from_csv_should_not_create_2(void) {
-    country *c = create_country_from_csv(NULL);
+    country *c = create_country_from_csv(NULL, 1);
     TEST_ASSERT_NULL(c);
 }
 
 void test_create_csv_from_country_should_create(void) {
-    country *c = create_country_from_csv("../../DATA/initial.csv");
+    country *c = create_country_from_csv("../../DATA/initial.csv", 1);
     create_csv_from_country(c, "test.csv", 0);
     FILE *fp = fopen("test.csv", "r");
     TEST_ASSERT_NOT_NULL(fp);
