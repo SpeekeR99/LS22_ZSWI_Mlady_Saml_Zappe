@@ -165,6 +165,7 @@ if platform.uname()[0] == "Windows":
     SCALE_FACTOR = ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100
 DEFAULT_Z_COEF = 5  # 8
 DEFAULT_RADIUS_COEF = 5.5 - 0.5 * SCALE_FACTOR  # 18.5 (100%) 18.2 (125%)
+old_frame = 0
 frame = 0
 old_total_infected = 0
 total_infected = 0
@@ -220,13 +221,15 @@ def create_default_figure(filepath=FRAMESPATH + "frame0000.csv", z_coef=DEFAULT_
     :return: Default figure with density mapbox
     """
     df = pd.read_csv(filepath)  # Reading the main data here
+    curr_frame = 1000 * int(filepath[-8]) + 100 * int(filepath[-7]) + 10 * int(filepath[-6]) + int(filepath[-5])
 
     global old_total_infected
     global total_infected
     global new_infected
     old_total_infected = total_infected
     total_infected = df["pocet_nakazenych"].sum()
-    new_infected = total_infected - old_total_infected
+    if curr_frame != old_frame:
+        new_infected = total_infected - old_total_infected
 
     fig = px.density_mapbox(  # Creating new figure
         df,
@@ -324,6 +327,8 @@ def update_img(chosen_frame, curr_fig, z_coef=DEFAULT_Z_COEF, radius_coef=DEFAUL
     filepath = FRAMESPATH + "frame" + str(chosen_frame).rjust(4, '0') + ".csv"
     fig = create_default_figure(filepath=filepath, z_coef=z_coef, radius_coef=radius_coef)
     fig = remain_figure_state(fig, curr_fig)
+    global old_frame
+    old_frame = chosen_frame
     return fig
 
 

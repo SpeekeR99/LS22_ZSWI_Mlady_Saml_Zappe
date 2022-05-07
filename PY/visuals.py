@@ -258,8 +258,8 @@ def update_figure(chosen_frame, curr_fig, z_value, radius_value):
     """
 
     return update_img(chosen_frame, curr_fig, z_coef=z_value, radius_coef=radius_value), \
-           "Total number of infected: " + '{:,}'.format(utils.total_infected).replace(',', ' '), \
-           "Newly infected: " + '{:,}'.format(utils.new_infected).replace(',', ' ')
+        "Total number of infected: " + '{:,}'.format(utils.total_infected).replace(',', ' '), \
+        "Newly infected: " + '{:,}'.format(utils.new_infected).replace(',', ' ')
 
 
 @app.callback(
