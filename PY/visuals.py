@@ -12,6 +12,8 @@ if len(sys.argv) == 3:
     set_ip(sys.argv[1])
     set_port(int(sys.argv[2]))
 
+create_first_frame()
+
 app = DashProxy(
     name="visuals",
     prevent_initial_callbacks=True,
@@ -387,5 +389,4 @@ def kill_simulation(kill_input):
 if __name__ == '__main__':
     if not socket_send(b"start"):
         print("Could not send 'start' to server")
-    create_first_frame()
     app.run_server(debug=False, use_reloader=False)
