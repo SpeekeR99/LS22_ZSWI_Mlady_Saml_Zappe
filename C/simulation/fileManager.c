@@ -117,6 +117,10 @@ int process_csv(country **the_country, const char *filepath, int create_citizens
         city_index++;
     }
 
+    (*the_country)->movedCitizensLength = citizen_index;
+    (*the_country)->movedCitizens = malloc(citizen_index * sizeof(char));
+
+    if (!(*the_country)->movedCitizens) return 0;
     // Closing csv file
     if (fclose(fp) == EOF) return 0;
 
