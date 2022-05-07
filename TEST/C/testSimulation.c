@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "Unity/src/unity.h"
 #include "../../C/simulation/simulation.h"
 
@@ -39,6 +40,8 @@ void test_freeCity(void) {
 
 void test_createCountry_should_not_be_null(void) {
     country *ctry = createCountry(1);
+    ctry->cities = calloc(1, sizeof(city *));
+    ctry->distances = calloc(1, sizeof(city *));
     TEST_ASSERT_NOT_NULL(ctry);
     freeCountry(&ctry);
 }
@@ -50,6 +53,8 @@ void test_createCountry_should_be_null(void) {
 
 void test_freeCountry(void) {
     country *ctry = createCountry(1);
+    ctry->cities = calloc(1, sizeof(city *));
+    ctry->distances = calloc(1, sizeof(city *));
     freeCountry(&ctry);
     TEST_ASSERT_NULL(ctry);
 }

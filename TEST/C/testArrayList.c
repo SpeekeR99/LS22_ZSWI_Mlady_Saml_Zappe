@@ -25,7 +25,7 @@ void test_arrayListAdd_should_add(void) {
     arrayList *al = createArrayList(10, sizeof(int));
     int worked = arrayListAdd(al, (void *) 5);
     TEST_ASSERT_EQUAL(worked, 1);
-    TEST_ASSERT_EQUAL((int *) al->data[0], 5);
+    TEST_ASSERT_EQUAL(5, (int *) al->data[0]);
     freeArrayList(&al);
 }
 
