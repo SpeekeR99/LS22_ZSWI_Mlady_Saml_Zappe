@@ -4,6 +4,7 @@
 #include "simulation.h"
 
 #define SAVE_FILEPATH "./DATA/sim_frames/save.bin"
+#define PARAMETERS_FILE "./parameters.cfg"
 #define LATITUDE_COLUMN_NAME "latitude"
 #define LONGITUDE_COLUMN_NAME "longitude"
 #define POPULATION_COLUMN_NAME "pocet_obyvatel"
@@ -15,5 +16,6 @@ country *create_country_from_csv(const char *filepath, int create_citizens);
 int create_csv_from_country(country *the_country, const char *filepath, int date);
 int save_state(country *the_country, int date);
 int load_state(country **the_country);
+int load_parameters(const char *filepath);
 
 #endif

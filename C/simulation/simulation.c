@@ -13,15 +13,6 @@
 #endif
 
 #define radians(degrees) (degrees) * (M_PI / 180.0)
-//number from <0,1) determines how many citizens will citizen meet
-#define densityToAbsolute 0.01
-
-#define INFECTION_TIME_IN_DAYS 14
-#define IMMUNITY_AFTER_INFECTION_IN_DAYS 30
-
-#define MOVING_CITIZENS 0.1
-#define SPREAD_MEAN 0.05
-#define SPREAD_STD_DEV 0.02
 
 /**
  * Simulates a day of the simulation (one step is one hour of "real time")
@@ -36,8 +27,8 @@ void simulateDay(country *theCountry, GaussRandom *theGaussRandom, GaussRandom *
     int hour;
     for (hour = 0; hour < 24; hour++) {
         simulationStep(theCountry, theGaussRandom, theSpreadRandom);
-        if ((hour + 1) % 8 == 0) goBackHome(theCountry, 0.95);
-        else goBackHome(theCountry, 0.1);
+        if ((hour + 1) % 8 == 0) goBackHome(theCountry, GO_BACK_THRESHOLD_HIGH);
+        else goBackHome(theCountry, GO_BACK_THRESHOLD_LOW);
     }
     updateCitizenStatuses(theCountry);
 }
@@ -56,6 +47,31 @@ void updateCitizenStatuses(country *theCountry) {
     city *theCity;
     arrayList *theList;
     citizen *theCitizen;
+    GaussRandom *infectedRandom;
+    GaussRandom *immunityRandom;
+    double *randomDate;
+
+    if (!theCountry) return;
+
+    infectedRandom = createRandom(INFECTION_TIME_MEAN, INFECTION_TIME_STD_DEV);
+
+    if (!infectedRandom) return;
+
+    immunityRandom = createRandom(IMMUNITY_TIME_MEAN, IMMUNITY_TIME_STD_DEV);
+
+    if (!immunityRandom) {
+        freeRandom(&infectedRandom);
+        return;
+    }
+
+    randomDate = malloc(sizeof(double));
+
+    if (!randomDate) {
+        freeRandom(&infectedRandom);
+        freeRandom(&immunityRandom);
+        return;
+    }
+
 
     for (i = 0; i < theCountry->numberOfCities; i++) {
         theCity = theCountry->cities[i];
@@ -75,7 +91,7 @@ void updateCitizenStatuses(country *theCountry) {
 
                         // if the citizen is infected, there is a chance he will die
                         deathChance = (double) rand() / RAND_MAX;
-                        if (deathChance < 0.001) { // todo fiddle around with this magic number
+                        if (deathChance < DEATH_THRESHOLD) {
                             hashTableRemoveElement(j, k, theCity->citizens);
                             freeCitizen(&theCitizen);
                             theCity->infected--;
@@ -83,8 +99,9 @@ void updateCitizenStatuses(country *theCountry) {
                             continue;
                         }
 
+                        nextNormalDistDouble(infectedRandom, randomDate);
                         // if the citizen was infected for 14 days, he is cured now
-                        if (theCitizen->timeFrame == INFECTION_TIME_IN_DAYS) {
+                        if (theCitizen->timeFrame >= *randomDate) {
                             theCitizen->status = RECOVERED;
                             theCity->infected--;
                             theCitizen->timeFrame = 0;
@@ -93,7 +110,8 @@ void updateCitizenStatuses(country *theCountry) {
                     }
 
                     // if the citizen is cured for 30 days, he can be re-infected again
-                    if (theCitizen->status == RECOVERED && theCitizen->timeFrame == IMMUNITY_AFTER_INFECTION_IN_DAYS) {
+                    nextNormalDistDouble(immunityRandom, randomDate);
+                    if (theCitizen->status == RECOVERED && theCitizen->timeFrame >= *randomDate) {
                         theCitizen->status = NORMAL;
                         theCitizen->timeFrame = 0;
                     }
@@ -101,20 +119,23 @@ void updateCitizenStatuses(country *theCountry) {
             }
         }
     }
+    freeRandom(&infectedRandom);
+    freeRandom(&immunityRandom);
+    free(randomDate);
 }
 
 /** This function is one step of simulation where the citizens are moving between different cities
  *
  * @param theCountry initialized country
- * @param theGaussRandom gaussRandom struct with initialized mean and standard deviation
+ * @param theMoveRandom gaussRandom struct with initialized mean and standard deviation
  * @param theSpreadRandom gaussRandom struct with initialized mean and standard deviation
  * @return EXIT_SUCCESS or EXIT_FAILURE
  */
-int simulationStep(country *theCountry, GaussRandom *theGaussRandom, GaussRandom *theSpreadRandom) {
+int simulationStep(country *theCountry, GaussRandom *theMoveRandom, GaussRandom *theSpreadRandom) {
     int i;
     city *theCity;
 
-    if (!theCountry || !theGaussRandom || !theSpreadRandom) return EXIT_FAILURE;
+    if (!theCountry || !theMoveRandom || !theSpreadRandom) return EXIT_FAILURE;
 
     memset(theCountry->movedCitizens, 0, theCountry->movedCitizensLength * sizeof(char));
     int startIndex = 0;
@@ -125,7 +146,7 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom, GaussRandom
         computeDistances(i, theCountry);
         qsort(theCountry->distances, theCountry->numberOfCities, sizeof(cityDistance *), cmpCitiesByDistance);
 
-        startIndex = moveCitizens(theCountry, theCity, theGaussRandom, startIndex);
+        startIndex = moveCitizens(theCountry, theCity, theMoveRandom, startIndex);
         if (startIndex == -1) return EXIT_FAILURE;
     }
 
@@ -138,23 +159,23 @@ int simulationStep(country *theCountry, GaussRandom *theGaussRandom, GaussRandom
  * Function computes how many people will be infected in all cities,
  * calls @function infectCitizensInCity to infect citizens
  * @param theCountry country with cities
- * @param random GaussRandom set up with spreading probabilities
+ * @param spreadRandom GaussRandom set up with spreading probabilities
  *        otherwise can fall into infinite loop
  * @return EXIT_SUCCESS or EXIT_FAILURE in case of invalid parameters
  *         or if it's not possible to allocate memory
  */
-int spreadPhenomenon(country *theCountry, GaussRandom *random) {
+int spreadPhenomenon(country *theCountry, GaussRandom *spreadRandom) {
     int i;
     int j;
     double populationDensity;
     city *theCity;
-    double *doublePointer;
+    double *spreadChance;
     int toInfect;
 
-    if (!theCountry || !random) return EXIT_FAILURE;
+    if (!theCountry || !spreadRandom) return EXIT_FAILURE;
 
-    doublePointer = malloc(sizeof(double));
-    if (!doublePointer) return EXIT_FAILURE;
+    spreadChance = malloc(sizeof(double));
+    if (!spreadChance) return EXIT_FAILURE;
 
     for (i = 0; i < theCountry->numberOfCities; i++) {
         theCity = theCountry->cities[i];
@@ -165,16 +186,16 @@ int spreadPhenomenon(country *theCountry, GaussRandom *random) {
         for (j = 0; j < theCity->infected; j++) {
             //we need only numbers in interval <0,1>
             do {
-                nextNormalDistDouble(random, doublePointer);
-            } while (*doublePointer < 0 || *doublePointer > 1);
+                nextNormalDistDouble(spreadRandom, spreadChance);
+            } while (*spreadChance < 0 || *spreadChance > 1);
 
-            toInfect += (int)(*doublePointer * populationDensity * densityToAbsolute);
+            toInfect += (int)(*spreadChance * populationDensity * densityToAbsolute);
         }
 
         infectCitizensInCity(theCity, toInfect);
     }
 
-    free(doublePointer);
+    free(spreadChance);
     return EXIT_SUCCESS;
 }
 
@@ -213,25 +234,25 @@ void infectCitizensInCity(city *theCity, int toInfect) {
  *
  * @param theCountry initialized country
  * @param theCity current city
- * @param theGaussRandom gaussRandom struct with initialized mean and standard deviation
+ * @param moveRandom gaussRandom struct with initialized mean and standard deviation
  * @param startIndex index at which should moving start at, it is there because of parameterized
  *                   looping through citizens
 
  * @return startIndex for next city or -1 in case of invalid parameters or if it is not possible
  *         to allocate memory
  */
-int moveCitizens(country *theCountry, city *theCity, GaussRandom *theGaussRandom, int startIndex) {
+int moveCitizens(country *theCountry, city *theCity, GaussRandom *moveRandom, int startIndex) {
     int j;
     int k;
     int index;
-    double *doublePointer;
+    double *moveDistance;
     arrayList *theList;
     citizen *theCitizen;
 
-    if (!theCountry || !theCity || !theGaussRandom) return -1;
+    if (!theCountry || !theCity || !moveRandom) return -1;
 
-    doublePointer = malloc(sizeof(double));
-    if (!doublePointer) return -1;
+    moveDistance = malloc(sizeof(double));
+    if (!moveDistance) return -1;
 
     int moving = (int) (1.0 / MOVING_CITIZENS);
     k = startIndex;
@@ -251,13 +272,13 @@ int moveCitizens(country *theCountry, city *theCity, GaussRandom *theGaussRandom
             theCountry->movedCitizens[theCitizen->id] = 1;
 
             //maybe we could delete this, what can possibly happen :)
-            if (nextNormalDistDouble(theGaussRandom, doublePointer) == EXIT_FAILURE) {
-                free(doublePointer);
+            if (nextNormalDistDouble(moveRandom, moveDistance) == EXIT_FAILURE) {
+                free(moveDistance);
                 return -1;
             }
 
             //finds city which is the closest (not really) to the distance which citizen should travel
-            index = interpolationSearch(ABS(*doublePointer), theCountry->numberOfCities, theCountry->distances);
+            index = interpolationSearch(ABS(*moveDistance), theCountry->numberOfCities, theCountry->distances);
             //todo
             index = theCountry->distances[index]->id;
 
@@ -279,7 +300,7 @@ int moveCitizens(country *theCountry, city *theCity, GaussRandom *theGaussRandom
         k -= theList->filledItems;
     }
 
-    free(doublePointer);
+    free(moveDistance);
     return k;
 }
 
@@ -389,13 +410,15 @@ country *createCountry(int numberOfCities) {
     theCountry = malloc(sizeof(country));
     if (!theCountry) return NULL;
 
-    theCountry->cities = malloc(numberOfCities * sizeof(city *));
+    theCountry->cities = calloc(numberOfCities, sizeof(city *));
+
     if (!theCountry->cities) {
         free(theCountry);
         return NULL;
     }
 
-    theCountry->distances = malloc(numberOfCities * sizeof(cityDistance *));
+    theCountry->distances = calloc(numberOfCities, sizeof(city *));
+
     for (i = 0; i < numberOfCities; i++) {
         theCountry->distances[i] = createCityDistance();
     }
@@ -632,7 +655,11 @@ void *start_and_loop(void * args) {
         fprintf(stderr, "Error: Could not create country from ini csv file\n");
         return NULL;
     }
-    GaussRandom *grand = createRandom(MEAN, STDDEV);
+    if (load_parameters(PARAMETERS_FILE) == EXIT_FAILURE) {
+        fprintf(stderr, "Error: Could not load parameters from parameters.cfg file\n");
+        return NULL;
+    }
+    GaussRandom *moveRandom = createRandom(MOVE_MEAN, MOVE_STD_DEV);
     GaussRandom *spreadRandom = createRandom(SPREAD_MEAN, SPREAD_STD_DEV);
 
     /* filename: frameXXXX.csv = 13+1 chars = 14 (+1 = null term.) */
@@ -642,12 +669,11 @@ void *start_and_loop(void * args) {
         start = clock();
 
         sprintf(filename, CSV_NAME_FORMAT, date);
-        simulateDay(ctry, grand, spreadRandom);
+        simulateDay(ctry, moveRandom, spreadRandom);
         create_csv_from_country(ctry, filename, date);
 
         end = clock();
         printf("Loop %i done in %f sec.\n",date, ((double)(end-start))/CLOCKS_PER_SEC);
-
         save_state(ctry, date);
         printf("Saved current state successfully.\n");
     }

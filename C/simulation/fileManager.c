@@ -3,6 +3,7 @@
 #include <string.h>
 #include "fileManager.h"
 
+const int MAXLENGTH = 4096;
 /**
  * Basically just counts the number of lines in the csv file (minus one - heading)
  * @param filepath Path to the csv file
@@ -98,14 +99,6 @@ int process_csv(country **the_country, const char *filepath, int create_citizens
             continue;
         }
 
-        //set up infected citizens first
-        for (i = 0; i < theCity->infected; i++) {
-            theCitizen = createCitizen(citizen_index, city_index);
-            if (!theCitizen) return 0;
-            theCitizen->status = INFECTED;
-            hashTableAddElement(theCitizen, citizen_index, theCity->citizens);
-            citizen_index++;
-        }
 
         for (i = 0; i < theCity->population - theCity->infected; i++) {
             theCitizen = createCitizen(citizen_index, city_index);
@@ -114,6 +107,14 @@ int process_csv(country **the_country, const char *filepath, int create_citizens
             citizen_index++;
         }
 
+        //set up infected citizens
+        for (i = 0; i < theCity->infected; i++) {
+            theCitizen = createCitizen(citizen_index, city_index);
+            if (!theCitizen) return 0;
+            theCitizen->status = INFECTED;
+            hashTableAddElement(theCitizen, citizen_index, theCity->citizens);
+            citizen_index++;
+        }
         city_index++;
     }
 
@@ -268,3 +269,110 @@ int load_state(country **the_country) {
 
     return date;
 }
+
+/**
+ * Loads all needed parameters for the simulation
+ * @param filepath path to configuration file containing all the parameters
+ * @return EXIT_SUCCESS or EXIT_FAILURE in case of corrupted configuration file
+ */
+int load_parameters(const char *filepath) {
+    int counter;
+    char *string;
+    char *parseable_string;
+    FILE *config;
+    char should_continue;
+
+    if (!filepath) return EXIT_FAILURE;
+
+    config = fopen(filepath, "r");
+    if (!config) return EXIT_FAILURE;
+
+    string = malloc(MAXLENGTH);
+    should_continue = 1;
+
+    if (!string) {
+        fclose(config);
+        return EXIT_FAILURE;
+    }
+
+    counter = 0;
+    while (should_continue && !feof(config)) {
+        fgets(string, MAXLENGTH, config);
+        //this line is a comment, so continue
+        if (string[0] == '#') continue;
+
+        //we only need the part which is after colon
+        parseable_string = strchr(string, ':');
+        //line doesn't contain a colon, the file is corrupted
+        if (!parseable_string) break;
+
+        //pointer points to place where colon is, after colon is whitespace and then the parameter
+        parseable_string = parseable_string + 2;
+        switch (counter) {
+            case 0:
+                MOVE_STD_DEV = strtod(parseable_string, NULL);
+                if (MOVE_STD_DEV <= 0) should_continue = 0;
+                break;
+            case 1:
+                MOVE_MEAN = strtod(parseable_string, NULL);
+                if (MOVE_MEAN <= 0) should_continue = 0;
+                break;
+            case 2:
+                densityToAbsolute = strtod(parseable_string, NULL);
+                if (densityToAbsolute <= 0 || densityToAbsolute > 1) should_continue = 0;
+                break;
+            case 3:
+                INFECTION_TIME_MEAN = strtol(parseable_string, NULL, 10);
+                if (INFECTION_TIME_MEAN <= 0) should_continue = 0;
+                break;
+            case 4:
+                INFECTION_TIME_STD_DEV = strtol(parseable_string, NULL, 10);
+                if (INFECTION_TIME_STD_DEV <= 0) should_continue = 0;
+                break;
+            case 5:
+                IMMUNITY_TIME_MEAN = strtol(parseable_string, NULL, 10);
+                if (IMMUNITY_TIME_MEAN < 0) should_continue = 0;
+                break;
+            case 6:
+                IMMUNITY_TIME_STD_DEV = strtol(parseable_string, NULL, 10);
+                if (IMMUNITY_TIME_STD_DEV <= 0) should_continue = 0;
+                break;
+            case 7:
+                MOVING_CITIZENS = strtod(parseable_string, NULL);
+                if (MOVING_CITIZENS <= 0 || MOVING_CITIZENS > 1) should_continue = 0;
+                break;
+            case 8:
+                SPREAD_MEAN = strtod(parseable_string, NULL);
+                if (SPREAD_MEAN <= 0 || SPREAD_MEAN > 1) should_continue = 0;
+                break;
+            case 9:
+                SPREAD_STD_DEV = strtod(parseable_string, NULL);
+                if (SPREAD_STD_DEV <= 0 || SPREAD_STD_DEV > 1) should_continue = 0;
+                break;
+            case 10:
+                DEATH_THRESHOLD = strtod(parseable_string, NULL);
+                if (DEATH_THRESHOLD < 0 || DEATH_THRESHOLD > 1) should_continue = 0;
+                break;
+            case 11:
+                GO_BACK_THRESHOLD_HIGH = strtod(parseable_string, NULL);
+                if (GO_BACK_THRESHOLD_HIGH < 0 || GO_BACK_THRESHOLD_HIGH > 1) should_continue = 0;
+                break;
+            case 12:
+                GO_BACK_THRESHOLD_LOW = strtod(parseable_string, NULL);
+                if (GO_BACK_THRESHOLD_LOW < 0 || GO_BACK_THRESHOLD_LOW > 1) {
+                    counter--;
+                }
+                should_continue = 0;
+                break;
+            default:
+                should_continue = 0;
+        }
+        counter++;
+    }
+
+    fclose(config);
+    free(string);
+    //were all the parameters loaded?
+    return counter == 13 ? EXIT_SUCCESS : EXIT_FAILURE;
+}
+
