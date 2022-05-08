@@ -8,12 +8,12 @@
 #include "../simulation/simulation.h"
 
 #define SEND_MAX_SIZE 4194304
-#define NO_DATA_MESSAGE "no data"
+#define NO_DATA_MESSAGE "no data\x04"
 
 char SIM_STARTED = 0;
 
 void *out(int connfd, void *arg) {
-    write(connfd, "exit", strlen("exit"));
+    write(connfd, "exit\x04", strlen("exit\x04"));
     exit(0);
 }
 
@@ -27,7 +27,7 @@ void *out(int connfd, void *arg) {
  */
 void *start_simulation(int connfd, void *arg) {
     if (SIM_STARTED) {
-        //write(connfd, "already started\n", strlen("already started\n"));
+        printf("Simulation already running\n");
         return NULL;
     }
 
@@ -37,7 +37,7 @@ void *start_simulation(int connfd, void *arg) {
 
     SIM_STARTED = 1;
 
-    return &tid;
+    return NULL;
 
 }
 
@@ -60,7 +60,7 @@ void *send_data_from_simulation(int connfd, void *arg) {
     char *bff = malloc(SEND_MAX_SIZE * sizeof(char));
 
     int frame = 0;
-    sscanf((const unsigned char *) arg, "%*s %d", &frame);
+    sscanf((const char *) arg, "%*s %d", &frame);
 
     /* debug
     printf((const char *)arg);
@@ -68,10 +68,10 @@ void *send_data_from_simulation(int connfd, void *arg) {
     printf("frame: %i\n", frame);
     return;*/
 
-    char fname[14] = {0};
+    char fname[40] = {0};
     sprintf(fname, CSV_NAME_FORMAT, frame);
 
-    printf("sending data from %s\n", fname);
+    printf("Sending data from %s\n", fname);
 
     FILE *csv;
     if (!(csv = fopen((const char *) fname, "r"))) {

@@ -5,6 +5,10 @@
 
 # frames
 frame*.csv
+merged.csv
+
+#pycache
+__pycache__
 
 #dbg logs
 *.log

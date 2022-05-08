@@ -4,14 +4,30 @@
 #include "hashTable.h"
 #include "random.h"
 
-#define SIMULATION_INI_CSV "../../DATA/merged.csv"
-#define CSV_NAME_FORMAT "frame%04d.csv"
-#define MEAN    20.0
-#define STDDEV  20.0
 
+#define NORMAL 1
+#define INFECTED 2
+#define RECOVERED 3
+#define SIMULATION_INI_CSV "./DATA/initial.csv"
+#define CSV_NAME_FORMAT "./DATA/sim_frames/frame%04d.csv"
+
+double MOVE_STD_DEV;
+double MOVE_MEAN;
+double densityToAbsolute;
+int INFECTION_TIME_MEAN;
+int INFECTION_TIME_STD_DEV;
+int IMMUNITY_TIME_MEAN;
+int IMMUNITY_TIME_STD_DEV;
+double MOVING_CITIZENS;
+double SPREAD_MEAN;
+double SPREAD_STD_DEV;
+double DEATH_THRESHOLD;
+double GO_BACK_THRESHOLD_HIGH;
+double GO_BACK_THRESHOLD_LOW;
 
 typedef struct {
     int id;
+    int homeTown;
     char status;
     char timeFrame;
 }citizen;
@@ -22,7 +38,7 @@ typedef struct {
     int city_id;
     int population;
     int infected;
-    int area;
+    double area;
     hashTable *citizens;
 }city;
 
@@ -35,11 +51,13 @@ typedef struct {
     city **cities;
     cityDistance **distances;
     int numberOfCities;
+    int movedCitizensLength;
+    char *movedCitizens;
 }country;
 
 
 double computeDistanceHaversine(double latitude1, double longitude1, double latitude2, double longitude2);
-double compute_distance(city *firstCity, city *secondCity);
+double computeDistance(city *firstCity, city *secondCity);
 
 int cmpCitiesByDistance(const void *a, const void *b);
 cityDistance *createCityDistance();
@@ -47,12 +65,21 @@ void freeCityDistance(cityDistance **theCityDistance);
 
 int interpolationSearch(double distance, int citiesSize, cityDistance **cityDistances);
 void computeDistances(int cityIndex, country *theCountry);
-int simulationStep(country *theCountry, GaussRandom *theGaussRandom);
+void simulateDay(country *theCountry, GaussRandom *theGaussRandom, GaussRandom *theSpreadRandom);
+void updateCitizenStatuses(country *theCountry);
+
+int simulationStep(country *theCountry, GaussRandom *theMoveRandom, GaussRandom *theSpreadRandom);
+int goBackHome(country *theCountry, double threshold);
+int moveCitizens(country *theCountry, city *theCity, GaussRandom *moveRandom, int startIndex);
+
+int spreadPhenomenon(country *theCountry, GaussRandom *spreadRandom);
+void infectCitizensInCity(city *theCity, int toInfect);
 
 
 country *createCountry(int numberOfCities);
-city *createCity(int city_id, int area, int population, int infected, double lat, double lon);
-citizen *createCitizen(int id);
+city *createCity(int city_id, double area, int population, int infected, double lat, double lon);
+
+citizen *createCitizen(int id, int homeTown);
 void freeCountry(country **theCountry);
 void freeCity(city **theCity);
 void freeCitizen(citizen **theCitizen);

@@ -1,0 +1,326 @@
+[
+  {
+    "rqs": {
+      "rqmList": [
+        {
+          "rqm": {
+            "prefix": "RQM.01.01",
+            "name": "Existence mapy",
+            "criticality": "critical",
+            "description": "\u003cp\u003eExistence mapy\u003c/p\u003e\n",
+            "category": "undefined"
+          }
+        },
+        {
+          "rqm": {
+            "prefix": "RQM.01.02",
+            "name": "Možnost interakce s mapou",
+            "criticality": "major",
+            "description": "\u003cp\u003eMožnost interakce s mapou\u003c/p\u003e\n",
+            "category": "undefined"
+          }
+        },
+        {
+          "rqm": {
+            "prefix": "RQM.01.03",
+            "name": "Existence dat při hoverování",
+            "criticality": "critical",
+            "description": "\u003cp\u003eExistence dat při hoverov\u0026aacute;n\u0026iacute; nad nimi\u003c/p\u003e\n",
+            "category": "undefined"
+          }
+        },
+        {
+          "rqm": {
+            "prefix": "RQM.01.04",
+            "name": "Existence legendy vpravo od mapy",
+            "criticality": "critical",
+            "description": "\u003cp\u003eExistence legendy barev vpravo od mapy\u003c/p\u003e\n",
+            "category": "undefined"
+          }
+        }
+      ],
+      "prefix": "RQS.01",
+      "name": "Mapa",
+      "description": ""
+    }
+  },
+  {
+    "rqs": {
+      "rqsList": [
+        {
+          "rqs": {
+            "rqmList": [
+              {
+                "rqm": {
+                  "prefix": "RQM.02.03.01",
+                  "name": "Existence slideru",
+                  "criticality": "critical",
+                  "description": "\u003cp\u003eExistence slideru\u003c/p\u003e\n",
+                  "category": "undefined"
+                }
+              },
+              {
+                "rqm": {
+                  "prefix": "RQM.02.03.02",
+                  "name": "Interaktivní funkčnost slideru",
+                  "criticality": "major",
+                  "description": "\u003cp\u003eInteraktivn\u0026iacute; funkčnost slideru\u003c/p\u003e\n",
+                  "category": "undefined"
+                }
+              }
+            ],
+            "prefix": "RQS.02.03",
+            "name": "Radius slider",
+            "description": ""
+          }
+        },
+        {
+          "rqs": {
+            "rqmList": [
+              {
+                "rqm": {
+                  "prefix": "RQM.02.02.01",
+                  "name": "Existence slideru",
+                  "criticality": "minor",
+                  "description": "\u003cp\u003eExistence slideru\u003c/p\u003e\n",
+                  "category": "undefined"
+                }
+              },
+              {
+                "rqm": {
+                  "prefix": "RQM.02.02.02",
+                  "name": "Interaktivní funkčnost slideru",
+                  "criticality": "major",
+                  "description": "\u003cp\u003eInteraktivn\u0026iacute; funkčnost slideru\u003c/p\u003e\n",
+                  "category": "undefined"
+                }
+              }
+            ],
+            "prefix": "RQS.02.02",
+            "name": "Z slider",
+            "description": ""
+          }
+        },
+        {
+          "rqs": {
+            "rqmList": [
+              {
+                "rqm": {
+                  "prefix": "RQM.02.01.01",
+                  "name": "Existence animačního slideru",
+                  "criticality": "critical",
+                  "description": "\u003cp\u003eExistence animačn\u0026iacute;ho slideru pod mapou (pokud jsou vygenerovan\u0026aacute; data)\u003c/p\u003e\n",
+                  "category": "undefined"
+                }
+              },
+              {
+                "rqm": {
+                  "prefix": "RQM.02.01.02",
+                  "name": "Interaktivní funkčnost slideru",
+                  "criticality": "critical",
+                  "description": "\u003cp\u003eInteraktivn\u0026iacute; funkčnost slideru\u003c/p\u003e\n",
+                  "category": "undefined"
+                }
+              }
+            ],
+            "prefix": "RQS.02.01",
+            "name": "Animation slider",
+            "description": ""
+          }
+        }
+      ],
+      "prefix": "RQS.02",
+      "name": "Slidery",
+      "description": ""
+    }
+  },
+  {
+    "rqs": {
+      "rqsList": [
+        {
+          "rqs": {
+            "rqmList": [
+              {
+                "rqm": {
+                  "prefix": "RQM.03.01.01",
+                  "name": "Existence tlačítka Play",
+                  "criticality": "critical",
+                  "description": "\u003cp\u003eExistence tla?\u0026iacute;tka Play\u003c/p\u003e\n",
+                  "category": "undefined"
+                }
+              },
+              {
+                "rqm": {
+                  "prefix": "RQM.03.01.02",
+                  "name": "Funkčnost tlačítka Play",
+                  "criticality": "critical",
+                  "description": "\u003cp\u003eFunk?nost tla?\u0026iacute;tka Play\u003c/p\u003e\n",
+                  "category": "undefined"
+                }
+              }
+            ],
+            "prefix": "RQS.03.01",
+            "name": "Play tlačítko",
+            "description": ""
+          }
+        },
+        {
+          "rqs": {
+            "rqmList": [
+              {
+                "rqm": {
+                  "prefix": "RQM.03.02.01",
+                  "name": "Existence tlačítka Pause",
+                  "criticality": "critical",
+                  "description": "\u003cp\u003eExistence tla?\u0026iacute;tka Pause\u003c/p\u003e\n",
+                  "category": "undefined"
+                }
+              },
+              {
+                "rqm": {
+                  "prefix": "RQM.03.02.02",
+                  "name": "Funkčnost tlačítka Pause",
+                  "criticality": "critical",
+                  "description": "\u003cp\u003eFunk?nost tla?\u0026iacute;tka Pause\u003c/p\u003e\n",
+                  "category": "undefined"
+                }
+              }
+            ],
+            "prefix": "RQS.03.02",
+            "name": "Pause tlačítko",
+            "description": ""
+          }
+        },
+        {
+          "rqs": {
+            "rqmList": [
+              {
+                "rqm": {
+                  "prefix": "RQM.03.03.01",
+                  "name": "Existence tlačítka Reset",
+                  "criticality": "major",
+                  "description": "\u003cp\u003eExistence tlač\u0026iacute;tka Reset\u003c/p\u003e\n",
+                  "category": "undefined"
+                }
+              },
+              {
+                "rqm": {
+                  "prefix": "RQM.03.03.02",
+                  "name": "Funkčnost tlačítka Reset",
+                  "criticality": "minor",
+                  "description": "\u003cp\u003eFunkčnost tlač\u0026iacute;tka Reset\u003c/p\u003e\n",
+                  "category": "undefined"
+                }
+              }
+            ],
+            "prefix": "RQS.03.03",
+            "name": "Default view tlačítko",
+            "description": ""
+          }
+        },
+        {
+          "rqs": {
+            "rqmList": [
+              {
+                "rqm": {
+                  "prefix": "RQM.03.04.01",
+                  "name": "Existence tlačítka Kill visualization",
+                  "criticality": "major",
+                  "description": "\u003cp\u003eExistence tla?\u0026iacute;tka Kill visualization\u003c/p\u003e\n",
+                  "category": "undefined"
+                }
+              },
+              {
+                "rqm": {
+                  "prefix": "RQM.03.04.02",
+                  "name": "Funkčnost tlačítka Kill visualization",
+                  "criticality": "major",
+                  "description": "\u003cp\u003eFunk?nost tla?\u0026iacute;tka Kill visualization\u003c/p\u003e\n",
+                  "category": "undefined"
+                }
+              }
+            ],
+            "prefix": "RQS.03.04",
+            "name": "Kill visualization tlačítko",
+            "description": ""
+          }
+        },
+        {
+          "rqs": {
+            "rqmList": [
+              {
+                "rqm": {
+                  "prefix": "RQM.03.05.01",
+                  "name": "Existence tlačítka Kill simulation",
+                  "criticality": "major",
+                  "description": "\u003cp\u003eExistence tla?\u0026iacute;tka Kill simulation\u003c/p\u003e\n",
+                  "category": "undefined"
+                }
+              },
+              {
+                "rqm": {
+                  "prefix": "RQM.03.05.02",
+                  "name": "Funkčnost tlačítka Kill simulation",
+                  "criticality": "major",
+                  "description": "\u003cp\u003eFunk?nost tla?\u0026iacute;tka Kill simulation\u003c/p\u003e\n",
+                  "category": "undefined"
+                }
+              }
+            ],
+            "prefix": "RQS.03.05",
+            "name": "Kill simulation tlačítko",
+            "description": ""
+          }
+        }
+      ],
+      "prefix": "RQS.03",
+      "name": "Tlačítka",
+      "description": ""
+    }
+  },
+  {
+    "rqs": {
+      "rqmList": [
+        {
+          "rqm": {
+            "prefix": "RQM.04.01",
+            "name": "Popisek Z slideru",
+            "criticality": "minor",
+            "description": "\u003cp\u003ePopisek Z slideru\u003c/p\u003e\n",
+            "category": "undefined"
+          }
+        },
+        {
+          "rqm": {
+            "prefix": "RQM.04.02",
+            "name": "Popisek Radius slideru",
+            "criticality": "minor",
+            "description": "\u003cp\u003ePopisek Radius\u0026nbsp;slideru\u003c/p\u003e\n",
+            "category": "undefined"
+          }
+        },
+        {
+          "rqm": {
+            "prefix": "RQM.04.03",
+            "name": "Počet nově nakažených",
+            "criticality": "critical",
+            "description": "\u003cp\u003ePočet nově nakažen\u0026yacute;ch\u003c/p\u003e\n",
+            "category": "undefined"
+          }
+        },
+        {
+          "rqm": {
+            "prefix": "RQM.04.04",
+            "name": "Počet celkově nakažených",
+            "criticality": "critical",
+            "description": "\u003cp\u003ePočet celkově nakažen\u0026yacute;ch\u003c/p\u003e\n",
+            "category": "undefined"
+          }
+        }
+      ],
+      "prefix": "RQS.04",
+      "name": "Text",
+      "description": ""
+    }
+  }
+]

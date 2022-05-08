@@ -1,0 +1,99 @@
+--------------------------------------------------------------------- 
+-                         TEST ARRAYLIST                            - 
+--------------------------------------------------------------------- 
+testArrayList.c:123:test_createArrayList_should_not_be_null:PASS
+testArrayList.c:124:test_createArrayList_should_be_null_1:PASS
+testArrayList.c:125:test_createArrayList_should_be_null_2:PASS
+testArrayList.c:126:test_arrayListAdd_should_add:PASS
+testArrayList.c:127:test_arrayListAdd_should_not_add_1:PASS
+testArrayList.c:128:test_arrayListAdd_should_not_add_2:PASS
+testArrayList.c:129:test_arrayListExpand_should_expand:PASS
+testArrayList.c:130:test_arrayListGetPointer_should_get_pointer:PASS
+testArrayList.c:131:test_arrayListGetPointer_should_not_get_pointer_1:PASS
+testArrayList.c:132:test_arrayListGetPointer_should_not_get_pointer_2:PASS
+testArrayList.c:133:test_arrayListGetPointer_should_not_get_pointer_3:PASS
+testArrayList.c:134:test_arrayListRemoveElement_should_remove:PASS
+testArrayList.c:135:test_arrayListRemoveElement_should_not_remove_1:PASS
+testArrayList.c:136:test_arrayListRemoveElement_should_not_remove_2:PASS
+testArrayList.c:137:test_arrayListRemoveElement_should_not_remove_3:PASS
+testArrayList.c:138:test_freeArrayList:PASS
+
+-----------------------
+16 Tests 0 Failures 0 Ignored 
+OK
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+--------------------------------------------------------------------- 
+-                         TEST HASHTABLE                            - 
+--------------------------------------------------------------------- 
+testHashTable.c:116:test_createHashTable_should_not_be_null_1:PASS
+testHashTable.c:117:test_createHashTable_should_not_be_null_2:PASS
+testHashTable.c:118:test_createHashTable_should_be_null_1:PASS
+testHashTable.c:119:test_createHashTable_should_be_null_2:PASS
+testHashTable.c:120:test_hashTableAddElement_should_add_1:PASS
+testHashTable.c:121:test_hashTableAddElement_should_add_2:PASS
+testHashTable.c:122:test_hashTableAddElement_should_not_add_1:PASS
+testHashTable.c:123:test_hashTableAddElement_should_not_add_2:PASS
+testHashTable.c:124:test_hashTableRemoveElement_should_remove:PASS
+testHashTable.c:125:test_hashTableRemoveElement_should_not_remove_1:PASS
+testHashTable.c:126:test_hashTableRemoveElement_should_not_remove_2:PASS
+testHashTable.c:127:test_hashTableRemoveElement_should_not_remove_3:PASS
+testHashTable.c:128:test_hashTableRemoveElement_should_not_remove_4:PASS
+testHashTable.c:129:test_expandArray_should_expand:PASS
+testHashTable.c:130:test_expandArray_should_not_expand:PASS
+testHashTable.c:131:test_freeHashTable:PASS
+
+-----------------------
+16 Tests 0 Failures 0 Ignored 
+OK
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+--------------------------------------------------------------------- 
+-                        TEST FILE MANAGER                          - 
+--------------------------------------------------------------------- 
+testFileManager.c:43:test_create_country_from_csv_should_create:PASS
+testFileManager.c:44:test_create_country_from_csv_should_not_create_1:PASS
+testFileManager.c:45:test_create_country_from_csv_should_not_create_2:PASS
+testFileManager.c:46:test_create_csv_from_country_should_create:PASS
+testFileManager.c:47:test_create_csv_from_country_should_not_create:PASS
+
+-----------------------
+5 Tests 0 Failures 0 Ignored 
+OK
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+--------------------------------------------------------------------- 
+-                          TEST RANDOM                              - 
+--------------------------------------------------------------------- 
+testRandom.c:94:test_createRandom:PASS
+testRandom.c:95:test_randomDouble:PASS
+testRandom.c:96:test_randomGaussian_should_work:PASS
+testRandom.c:97:test_randomGaussian_should_not_work_1:PASS
+testRandom.c:98:test_randomGaussian_should_not_work_2:PASS
+testRandom.c:99:test_nextNormalDistDouble_should_work:PASS
+testRandom.c:100:test_nextNormalDistDouble_should_not_work_1:PASS
+testRandom.c:101:test_nextNormalDistDouble_should_not_work_2:PASS
+testRandom.c:102:test_nextNormalDistDoubleFaster_should_work:PASS
+testRandom.c:103:test_nextNormalDistDoubleFaster_should_not_work_1:PASS
+testRandom.c:104:test_nextNormalDistDoubleFaster_should_not_work_2:PASS
+testRandom.c:105:test_freeRandom:PASS
+
+-----------------------
+12 Tests 0 Failures 0 Ignored 
+OK
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+--------------------------------------------------------------------- 
+-                        TEST SIMULATION                            - 
+--------------------------------------------------------------------- 
+testSimulation.c:78:test_createCitizen_should_not_be_null:PASS
+testSimulation.c:79:test_createCitizen_should_be_null:PASS
+testSimulation.c:80:test_freeCitizen:PASS
+testSimulation.c:81:test_createCity_should_not_be_null:PASS
+testSimulation.c:82:test_createCity_should_be_null:PASS
+testSimulation.c:83:test_freeCity:PASS
+testSimulation.c:84:test_createCountry_should_not_be_null:PASS
+testSimulation.c:85:test_createCountry_should_be_null:PASS
+testSimulation.c:86:test_freeCountry:PASS
+testSimulation.c:87:test_createCityDistance:PASS
+testSimulation.c:88:test_freeCityDistance:PASS
+
+-----------------------
+11 Tests 0 Failures 0 Ignored 
+OK

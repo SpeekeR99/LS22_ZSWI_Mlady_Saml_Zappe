@@ -18,6 +18,9 @@
 #define DEF_PORT 4242
 #define MSG_MAX_LEN 2048
 #define CMD_MAX_LEN 14
+#define END_OF_MESSAGE '\x04'
+
+#define CLIENT_EXIT_CMD "I'LL BE BACK"
 
 /*-------- PROGRAM ARGUMENTS */
 
@@ -48,7 +51,7 @@ void *(*cmd_fns[CMDNUM])(int, void *) = {&send_data_from_simulation, &start_simu
  * @param IP The IP address to listen on. If null, INADDR_ANY is used.
  * @param port The port to listen on
  * @return The sockfd (int) of the listening socket, ready to accept a client
- * The queue of pending connections is of length 5, but only 1 client should request communication
+ * The queue of pending connections is of length 5, but only 1 client should request communication at a time
  */
 int create_listen_socket(const char *IP, int port) {
     /* Code by Yogesh Shukla et al. on GeeksforGeeks.org */
@@ -58,13 +61,14 @@ int create_listen_socket(const char *IP, int port) {
     int sockfd;
     struct sockaddr_in servaddr;
 
+    /* very WET code 🥵*/
     /* socket create and verification */
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
-        printf("socket creation failed...\n");
-        exit(0);
+        printf("Socket creation failed...\n");
+        exit(1);
     } else
-        printf("Socket successfully created..\n");
+        printf("Socket successfully created...\n");
 
     memset(&servaddr, 0, sizeof(servaddr));
     /* assign IP, PORT */
@@ -74,17 +78,17 @@ int create_listen_socket(const char *IP, int port) {
 
     /* Binding newly created socket to given IP and verification */
     if ((bind(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr))) != 0) {
-        printf("socket bind failed...\n");
-        exit(0);
+        printf("Socket bind failed...\n");
+        exit(1);
     } else
-        printf("Socket successfully binded.\n");
+        printf("Socket successfully binded...\n");
 
     /* Now server is ready to listen and verification */
     if ((listen(sockfd, 5)) != 0) {
         printf("Listen failed...\n");
-        exit(0);
+        exit(1);
     } else
-        printf("Server listening..\n");
+        printf("Server listening...\n");
 
     return sockfd;
 }
@@ -105,12 +109,35 @@ int create_connection(int sockfd) {
        This will halt the program until an outside client tries to connect */
     connfd = accept(sockfd, (struct sockaddr *) &cli, &len);
     if (connfd < 0) {
-        printf("server accept failed...\n");
-        exit(0);
+        printf("Server failed to accept the client...\n");
+        return -1;
     } else
-        printf("server accept the client...\n");
+        printf("Server accept the client...\n");
 
     return connfd;
+}
+
+/**
+ * @brief Reads a message from the client byte by byte until the END OF MESSAGE character is found
+ * 
+ * @param connfd connection file descriptor
+ * @param buffer the buffer to save data into
+ * @param buffer_len length of the buffer
+ * @return same as read() BUT if EOM is not found until the end of the buffer, returns buffer_len+1
+ */
+ 
+int read_socket(int connfd, char *buffer, size_t buffer_len) {
+    int n;
+    for(size_t i = 0; i < buffer_len; i++) {
+        n = read(connfd, buffer + i, 1);
+        if(n <= 0) return n;
+
+        if(buffer[i] == END_OF_MESSAGE) {
+            buffer[i] = '\0';
+            return i+1;
+        }
+    }
+    return buffer_len+1;
 }
 
 /**
@@ -122,28 +149,44 @@ int create_connection(int sockfd) {
 void comm_loop(int connfd) {
     char bf[MSG_MAX_LEN] = {0};
     char cmd[CMD_MAX_LEN] = {0};
-
+    int n;
     //printf("Entering comm loop");
     for (;;) {
         bzero(bf, MSG_MAX_LEN);
         bzero(cmd, CMD_MAX_LEN);
-        if (!read(connfd, bf, MSG_MAX_LEN)) {
+        n = read_socket(connfd, bf, MSG_MAX_LEN);
+
+        if (!n) {
             printf("Connection lost\n");
             return;
         }
+        if (n == MSG_MAX_LEN+1) {
+            printf("Message too long\n");
+            continue;
+        }
+        if (!strncmp(bf, CLIENT_EXIT_CMD, strlen(CLIENT_EXIT_CMD))) {
+            /* close the connection when the client wants to disconnect */
+            close(connfd);
+            printf("Client disconnected\n");
+            return;
+        }
+
         sscanf(bf, "%s", cmd);
         /* now: bf contains the recieved line, cmd the first word 
            (should be a name of a command from cmds array) */
 
-        //printf("recieved (whole, command): %s %s", bf, cmd);
-
-        for (size_t i = 0; i < CMDNUM; i++)
+        //printf("recieved (whole, command): (%s, %s)\n", bf, cmd);
+        size_t i;
+        for (i = 0; i < CMDNUM; i++)
             /* find command and call it with the connection file descriptor and the recieved line as its arguments */
             if (!strcmp(cmds[i], cmd)) {
                 printf("Calling command: %s\n", cmd);
                 cmd_fns[i](connfd, (void *) bf);
+                i = -1;
                 break;
             }
+        if(i != -1)
+            printf("Unknown command: %s\n", cmd);
 
         //printf("Message recieved, but was not command: %s\n", bf);
 
@@ -220,7 +263,8 @@ int main(int argc, char const *argv[]) {
        in the communication, the client gives commands to the server */
     for (;;) {
         connfd = create_connection(sockfd);
-        comm_loop(connfd);
+        if(connfd > 0)
+            comm_loop(connfd);
     }
 
 
