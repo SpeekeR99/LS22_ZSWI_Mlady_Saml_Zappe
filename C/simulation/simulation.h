@@ -11,20 +11,6 @@
 #define SIMULATION_INI_CSV "./DATA/initial.csv"
 #define CSV_NAME_FORMAT "./DATA/sim_frames/frame%04d.csv"
 
-double MOVE_STD_DEV;
-double MOVE_MEAN;
-double densityToAbsolute;
-int INFECTION_TIME_MEAN;
-int INFECTION_TIME_STD_DEV;
-int IMMUNITY_TIME_MEAN;
-int IMMUNITY_TIME_STD_DEV;
-double MOVING_CITIZENS;
-double SPREAD_MEAN;
-double SPREAD_STD_DEV;
-double DEATH_THRESHOLD;
-double GO_BACK_THRESHOLD_HIGH;
-double GO_BACK_THRESHOLD_LOW;
-
 typedef struct {
     int id;
     int homeTown;

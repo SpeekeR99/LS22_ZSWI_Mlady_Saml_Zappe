@@ -14,6 +14,20 @@
 
 #define radians(degrees) (degrees) * (M_PI / 180.0)
 
+double MOVE_STD_DEV;
+double MOVE_MEAN;
+double densityToAbsolute;
+int INFECTION_TIME_MEAN;
+int INFECTION_TIME_STD_DEV;
+int IMMUNITY_TIME_MEAN;
+int IMMUNITY_TIME_STD_DEV;
+double MOVING_CITIZENS;
+double SPREAD_MEAN;
+double SPREAD_STD_DEV;
+double DEATH_THRESHOLD;
+double GO_BACK_THRESHOLD_HIGH;
+double GO_BACK_THRESHOLD_LOW;
+
 /**
  * Simulates a day of the simulation (one step is one hour of "real time")
  * Calls simulationStep every hour
