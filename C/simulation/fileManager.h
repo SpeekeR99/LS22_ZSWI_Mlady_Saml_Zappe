@@ -14,7 +14,7 @@
 
 extern double MOVE_STD_DEV;
 extern double MOVE_MEAN;
-extern double densityToAbsolute;
+extern double MEETING_FACTOR;
 extern int INFECTION_TIME_MEAN;
 extern int INFECTION_TIME_STD_DEV;
 extern int IMMUNITY_TIME_MEAN;

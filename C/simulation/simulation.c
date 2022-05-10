@@ -16,7 +16,7 @@
 
 double MOVE_STD_DEV;
 double MOVE_MEAN;
-double densityToAbsolute;
+double MEETING_FACTOR;
 int INFECTION_TIME_MEAN;
 int INFECTION_TIME_STD_DEV;
 int IMMUNITY_TIME_MEAN;
@@ -203,7 +203,7 @@ int spreadPhenomenon(country *theCountry, GaussRandom *spreadRandom) {
                 nextNormalDistDouble(spreadRandom, spreadChance);
             } while (*spreadChance < 0 || *spreadChance > 1);
 
-            toInfect += (int)(*spreadChance * populationDensity * densityToAbsolute);
+            toInfect += (int)(*spreadChance * populationDensity * MEETING_FACTOR);
         }
 
         infectCitizensInCity(theCity, toInfect);

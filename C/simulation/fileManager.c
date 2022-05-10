@@ -323,8 +323,8 @@ int load_parameters(const char *filepath) {
                 if (MOVE_MEAN <= 0) should_continue = 0;
                 break;
             case 2:
-                densityToAbsolute = strtod(parseable_string, NULL);
-                if (densityToAbsolute <= 0 || densityToAbsolute > 1) should_continue = 0;
+                MEETING_FACTOR = strtod(parseable_string, NULL);
+                if (MEETING_FACTOR <= 0 || MEETING_FACTOR > 1) should_continue = 0;
                 break;
             case 3:
                 INFECTION_TIME_MEAN = strtol(parseable_string, NULL, 10);
